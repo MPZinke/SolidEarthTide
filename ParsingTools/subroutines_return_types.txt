@@ -1,0 +1,73 @@
+
+
+
+step2lon (xsta, fhr, t, xcorsta)
+ALTERED: t
+RETURN double
+
+
+
+sprod (x, y, scal, r1, r2)
+ALTERED: scal, r2, r1
+
+
+
+
+getghar (mjd, fmjd, ghar)
+ALTERED: ghar
+RETURN double
+
+
+
+lhsaaz (u, v, w, ra, az, va)
+ALTERED: ra, az, va
+
+
+
+geoxyz (gla, glo, eht, x, y, z)
+ALTERED: z, x, y
+OBJ coordinates
+
+
+
+rge (gla, glo, u, v, w, x, y, z)
+ALTERED: w, u, v
+
+
+
+
+rot1 (theta, x, y, z, u, v, w)
+ALTERED: w, u, v
+return double[3]
+
+
+
+
+rot3 (theta, x, y, z, u, v, w)
+ALTERED: w, u, v
+return double[3]
+
+
+
+// class method DATETIME
+civjts (iyr, imo, idy, ihr, imn, sec, tsec)
+ALTERED: sec
+RETURN double
+
+
+// class method DATETIME
+jtsciv (tsec, iyr, imo, idy, ihr, imn, sec)
+ALTERED: imn, imo, ihr, idy, sec, iyr
+OBJ time
+
+
+// class method DATETIME
+civmjd (iyr, imo, idy, ihr, imn, sec, mjd, fmjd)
+ALTERED: mjd
+RETURN int
+
+
+// class method DATETIME
+mjdciv (mjd, fmjd, iyr, imo, idy, ihr, imn, sec)
+ALTERED: imn, imo, ihr, idy, sec, iyr
+OBJ time

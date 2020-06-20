@@ -1,0 +1,101 @@
+——————— SUBROUTINES ———————
+109
+detide (xsta, mjd, fmjd, xsun, xmon, dxtide, lflag)
+
+307
+st1l1 (xsta, xsun, xmon, fac2sun, fac2mon, xcorsta)
+
+367
+step2diu (xsta, fhr, t, xcorsta)
+
+508
+step2lon (xsta, fhr, t, xcorsta)
+
+588
+st1idiu (xsta, xsun, xmon, fac2sun, fac2mon, xcorsta)
+
+630
+st1isem (xsta, xsun, xmon, fac2sun, fac2mon, xcorsta)
+
+673
+sprod (x, y, scal, r1, r2)
+
+703
+zero_vec8 (v)
+
+716
+moonxyz (mjd, fmjd, rm, lflag)
+
+839
+getghar (mjd, fmjd, ghar)
+
+879
+sunxyz (mjd, fmjd, rs, lflag)
+
+950
+lhsaaz (u, v, w, ra, az, va)
+
+968
+geoxyz (gla, glo, eht, x, y, z)
+
+988
+rge (gla, glo, u, v, w, x, y, z)
+
+1007
+rot1 (theta, x, y, z, u, v, w)
+
+1024
+rot3 (theta, x, y, z, u, v, w)
+
+1043
+setjd0 (iyr, imo, idy)
+
+1074
+civjts (iyr, imo, idy, ihr, imn, sec, tsec)
+
+1107
+jtsciv (tsec, iyr, imo, idy, ihr, imn, sec)
+
+1151
+civmjd (iyr, imo, idy, ihr, imn, sec, mjd, fmjd)
+
+1181
+mjdciv (mjd, fmjd, iyr, imo, idy, ihr, imn, sec)
+
+———————— CHANGES ————————
+step2lon (xsta, fhr, t, xcorsta)
+ALTERED: t
+
+sprod (x, y, scal, r1, r2)
+ALTERED: scal, r2, r1
+
+getghar (mjd, fmjd, ghar)
+ALTERED: ghar
+
+lhsaaz (u, v, w, ra, az, va)
+ALTERED: ra, az, va
+
+geoxyz (gla, glo, eht, x, y, z)
+ALTERED: z, x, y
+
+rge (gla, glo, u, v, w, x, y, z)
+ALTERED: w, u, v
+
+rot1 (theta, x, y, z, u, v, w)
+ALTERED: w, u, v
+
+rot3 (theta, x, y, z, u, v, w)
+ALTERED: w, u, v
+
+civjts (iyr, imo, idy, ihr, imn, sec, tsec)
+ALTERED: sec
+
+jtsciv (tsec, iyr, imo, idy, ihr, imn, sec)
+ALTERED: imn, imo, ihr, idy, sec, iyr
+
+civmjd (iyr, imo, idy, ihr, imn, sec, mjd, fmjd)
+ALTERED: mjd
+
+mjdciv (mjd, fmjd, iyr, imo, idy, ihr, imn, sec)
+ALTERED: imn, imo, ihr, idy, sec, iyr
+
