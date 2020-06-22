@@ -236,6 +236,7 @@ double Datetime::modified_julian_date_to_Terrestrial_Time_julian_date_centuries(
 	double julian_date_TT = _modified_julian + FMJD_TT + MODIFIED_JULIAN_TO_JULIAN;
 	double julian_centuries = (julian_date_TT - 2451545.0) / 36525.0;  // LN918: !*** julian centuries, TT
 
+	return julian_centuries;
 }
 
 

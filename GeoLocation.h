@@ -78,6 +78,9 @@ class GeoLocation
 
 		Datetime _datetime;
 
+		double lunar_ecliptic_longitude_for_year_2000(double, double, double, double, double);
+		double lunar_ecliptic_latitude_for_year_2000(double, double, double, double, double, double);
+		double distance_from_earth_to_moon(double, double, double, double, double, double);
 };
 
 #endif
