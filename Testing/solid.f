@@ -78,7 +78,11 @@
       do iloop=0,60*24
         lflag=.false.                           !*** false means flag not raised
         call sunxyz (mjd,fmjd,rsun,lflag)                   !*** mjd/fmjd in UTC
+C       MPZinke on 2020.07.01: check output values
+        write(*,*) 'sunxyz: ', rsun(1), rsun(2), rsun(3)
         call moonxyz(mjd,fmjd,rmoon,lflag)                  !*** mjd/fmjd in UTC
+C       MPZinke on 2020.07.01: check output values
+        write(*,*) 'moonxyz: ', rmoon(1), rmoon(2), rmoon(3)
         call detide (xsta,mjd,fmjd,rsun,rmoon,etide,lflag)  !*** mjd/fmjd in UTC
         xt = etide(1)
         yt = etide(2)
