@@ -784,6 +784,8 @@ C       MPZinke on 2020.07.01: check output values
      * -  110.d0/3600.d0*dsin((el+elp    )/rad)
      * -   55.d0/3600.d0*dsin((f+f-d-d   )/rad)
 
+      write(*,*) "selond: ", selond
+
 *** latitude w.r.t. equinox and ecliptic of year 2000
 
       q = 412.d0/3600.d0*dsin((f+f)/rad)              !*** temporary term
@@ -798,6 +800,8 @@ C       MPZinke on 2020.07.01: check output values
      * -   23.d0/3600.d0*dsin((elp+f-d-d )/rad)
      * +   21.d0/3600.d0*dsin((-el+f     )/rad)
      * +   11.d0/3600.d0*dsin((-elp+f-d-d)/rad)
+
+      write(*,*) "selatd: ", selatd
 
 *** distance from Earth center to Moon (m)
 

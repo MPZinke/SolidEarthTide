@@ -11,7 +11,7 @@
 ********************************************************************************************************************************/
 
 #include"GeoLocation.h"
-
+#include<iostream>
 
 // ———————————————— CONSTRUCTORS & DESTRUCTOR —————————————————
 
@@ -287,6 +287,8 @@ double mean_solar_anomaly, double mean_angular_distance, double mean_solar_lunar
 		- .0305555556 * sin(mean_lunar_anomaly + mean_solar_anomaly)
 		- .0152777778 * sin(mean_angular_distance + mean_angular_distance - mean_solar_lunar_longitude - mean_solar_lunar_longitude);
 
+	std::cout << "lunar_ecliptic_longitude: " << lunar_ecliptic_longitude << std::endl;
+
 	return lunar_ecliptic_longitude;
 }
 
@@ -322,8 +324,8 @@ double lunar_ecliptic_longitude)
 	double mean_solar_lunar_longitude_DBL = 2 * mean_solar_lunar_longitude;
 
 	// LN788: *** eq 3.49, p.72
-	double lunar_ecliptic_latitude = 18520 / 3600 * sin(mean_angular_distance + lunar_ecliptic_longitude
-			- mean_lunar_longitude + temp_value) - 526 / 3600 
+	double lunar_ecliptic_latitude = 18520 / 3600 
+		* sin(mean_angular_distance + lunar_ecliptic_longitude - mean_lunar_longitude + temp_value) - 526 / 3600 
 		* sin(mean_angular_distance - mean_solar_lunar_longitude_DBL) + 44 / 3600 
 		* sin(mean_lunar_anomaly + mean_angular_distance - mean_solar_lunar_longitude_DBL) - 31 / 3600
 		* sin(-mean_lunar_anomaly + mean_angular_distance - mean_solar_lunar_longitude_DBL) - 25 / 3600

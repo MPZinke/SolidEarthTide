@@ -4,6 +4,11 @@ C_FILES=Date.cpp Datetime.cpp GeoLocation.cpp SolidEarthFlexing.cpp
 
 all:
 	$(CXX) $(FLAGS) $(C_FILES) -o SolidEarthFlexing
+	gfortran solid.f -o solid
+
+
+cpp:
+	$(CXX) $(FLAGS) $(C_FILES) -o SolidEarthFlexing
 
 
 fortran:
@@ -11,6 +16,13 @@ fortran:
 
 
 ######################################### TESTING #########################################
+
+test:
+	$(CXX) $(FLAGS) $(C_FILES) -D _TESTING_ -o Testing/SolidEarthFlexing
+	Testing/SolidEarthFlexing < Testing/cpp_input.txt > Testing/cpp_output.txt
+	gfortran Testing/solid.f -o Testing/solid
+	Testing/solid < Testing/fortran_input.txt > Testing/fortran_output.txt
+
 
 cpp_test:
 	$(CXX) $(FLAGS) $(C_FILES) -D _TESTING_ -o Testing/SolidEarthFlexing
@@ -20,7 +32,7 @@ run_cpp_test:
 
 
 fortran_test:
-	gfortran solid.f -o solid
+	gfortran Testing/solid.f -o Testing/solid
 
 run_fortran_test:
-	./solid < fortran_input.txt > fortran_output.txt
+	Testing/solid < Testing/fortran_input.txt > Testing/fortran_output.txt

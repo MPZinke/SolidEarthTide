@@ -20,7 +20,6 @@
 using namespace std;
 
 
-
 template<class TEMP>
 TEMP get_number_from_cin(string message, TEMP min, TEMP max)
 {
@@ -56,13 +55,17 @@ int main(int arg_count, char* arg_variables[])
 	GeoLocation geolocation = create_geolocation_from_user_input();
 	geolocation.datetime()->standardize_civil_time_and_set_initial_julian_date();
 	geolocation.calculate_geocentric_solar_coordinates();
+	geolocation.calculate_geocentric_lunar_coordinates();
 
 	cout << "Loading data...";
 	double sun[3];
 	geolocation.sun_coordinates(sun);
+	double moon[3];
+	geolocation.moon_coordinates(moon);
 
 	#ifdef _TESTING_
-		cout << "\n" << sun[X] << "\n" << sun[Y] << "\n" << sun[Z] << endl;
+		cout << "\nsunxyz: " << sun[X] << "\t" << sun[Y] << "\t" << sun[Z] << endl;
+		cout << "\nmoonxyz: " << moon[X] << "\t" << moon[Y] << "\t" << moon[Z] << endl;
 	#endif
 	// double ecef[3];  //TESTING
 	// geolocation.ECEF_coordinates(ecef);  //TESTING
