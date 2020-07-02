@@ -51,7 +51,7 @@ GeoLocation create_geolocation_from_user_input()
 
 
 
-int main()
+int main(int arg_count, char* arg_variables[])
 {
 	GeoLocation geolocation = create_geolocation_from_user_input();
 	geolocation.datetime()->standardize_civil_time_and_set_initial_julian_date();
@@ -61,8 +61,9 @@ int main()
 	double sun[3];
 	geolocation.sun_coordinates(sun);
 
-	cout << "\n" << sun[X] << "\n" << sun[Y] << "\n" << sun[Z] << endl;  //TESTING
-
+	#ifdef _TESTING_
+		cout << "\n" << sun[X] << "\n" << sun[Y] << "\n" << sun[Z] << endl;
+	#endif
 	// double ecef[3];  //TESTING
 	// geolocation.ECEF_coordinates(ecef);  //TESTING
 

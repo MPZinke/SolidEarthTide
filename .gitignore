@@ -1,0 +1,18 @@
+### I/O ###
+# ~/
+solid.txt
+
+# ~/Testing
+Testing/cpp_output.txt
+Testing/fortran_output.txt
+Testing/solid.txt
+
+### EXECUTABLES ###
+
+# ~/
+SolidEarthFlexing
+solid
+
+# ~/Testing
+Testing/SolidEarthFlexing
+Testing/solid
