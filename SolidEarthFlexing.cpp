@@ -45,6 +45,10 @@ GeoLocation create_geolocation_from_user_input()
 	int month = get_number_from_cin("Month [1-12]: ", 1, 12);
 	int day = get_number_from_cin("Day [1-31]: ", 1, 31);
 
+	#ifdef _TESTING_
+		cout << endl;
+	#endif
+
 	return GeoLocation(latitude, longitude, Datetime(year, month, day));
 }
 
@@ -57,7 +61,10 @@ int main(int arg_count, char* arg_variables[])
 	geolocation.calculate_geocentric_solar_coordinates();
 	geolocation.calculate_geocentric_lunar_coordinates();
 
-	cout << "Loading data...";
+	#ifndef _TESTING_
+		cout << "Loading data...";
+	#endif
+
 	double sun[3];
 	geolocation.sun_coordinates(sun);
 	double moon[3];

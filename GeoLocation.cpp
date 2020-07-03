@@ -175,7 +175,7 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	double centuries_TT = _datetime.modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
 
 	#ifdef _TESTING_
-		std::cout << "sunxyz::fmjdtt 920: " << centuries_TT << std::endl;
+		std::cout << "sunxyz::t 927: " << centuries_TT << std::endl;
 	#endif
 
 	// *** julian centuries since 1.5 january 2000 (J2000)
@@ -187,12 +187,19 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	double radius = (149.619 - 2.499 * cos(em) - .021 * cos(2*em)) * 1000000000;  // meters
 	double solar_longitude_degrees = OPOD + em_degrees + (6892 * sin(em) + 72 * sin(2*em)) / SECONDS_IN_HOUR;
 
+	#ifdef _TESTING_
+		std::cout << "sunxyz::slond 936: " << solar_longitude_degrees << std::endl;
+	#endif
+
 	// LN928: *** precession of equinox wrt. J2000   (p.71)
 	solar_longitude_degrees += 1.3972 * centuries_TT;
 
 	// LN932: *** position vector of sun (mean equinox & ecliptic of J2000) (EME2000, ICRF)
 	// ***	lus long. advance due to precession -- eq. above)
 	double solar_longitude = solar_longitude_degrees / RADIAN;
+	#ifdef _TESTING_
+		std::cout << "sunxyz::slon 947: " << solar_longitude << std::endl;
+	#endif
 	double sin_solar_longitude = sin(solar_longitude);
 	double cos_solar_longitude = cos(solar_longitude);
 
@@ -202,6 +209,11 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	solar_radius[Y] = radius * sin_solar_longitude * COS_OBLIQUITY;
 	// LN941: !*** meters	*** eq. 3.46, p.71
 	solar_radius[Z] = radius * sin_solar_longitude * SIN_OBLIQUITY;
+
+	#ifdef _TESTING_
+		std::cout	<< "sunxyz::rs1, rs2, rs3 953: " << solar_radius[X] << ", " << solar_radius[Y] << ", " 
+					<< solar_radius[Z] << ", " << std::endl;
+	#endif
 
 	// LN943: *** convert position vector of sun to ECEF  (ignore polar motion/LOD)
 	double greenwhich_hour_angle = _datetime.greenwhich_hour_angle_radians();  // LN945 !*** sec 2.3.1,p.33

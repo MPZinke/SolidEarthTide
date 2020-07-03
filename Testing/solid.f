@@ -9,7 +9,7 @@
       common/stuff/rad,pi,pi2
       common/comgrs/a,e2
 
-      write(*,*) 'program solid -- UTC version -- 2018jun01'
+C       write(*,*) 'program solid -- UTC version -- 2018jun01'
 
 *** constants
 
@@ -47,6 +47,7 @@
       read(*,*) glod
       if(glod.lt.-360.d0.or.glod.gt.360.d0) go to 5
 
+      write(*, *) ""
 *** position of observing point (positive East)
 
       if(glod.lt.  0.d0) glod=glod+360.d0
@@ -924,7 +925,7 @@ C       enddo
 
       tjdtt = mjd+fmjdtt+2400000.5d0              !*** Julian Date, TT
       t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
-      write(*,*) "sunxyz::t 927: ", t
+      write(*, *) "sunxyz::t 927: ", t  !*** MPZinke
       emdeg = 357.5256d0 + 35999.049d0*t          !*** degrees
       em    = emdeg/rad                           !*** radians
       em2   = em+em                               !*** radians
@@ -933,6 +934,7 @@ C       enddo
 
       r=(149.619d0-2.499d0*dcos(em)-0.021d0*dcos(em2))*1.d9      !*** m.
       slond=opod + emdeg + (6892.d0*dsin(em)+72.d0*dsin(em2))/3600.d0
+      write(*, *) "sunxyz::slond 936: ", slond  !*** MPZinke
 
 *** precession of equinox wrt. J2000   (p.71)
 
@@ -942,12 +944,14 @@ C       enddo
 ***                        (plus long. advance due to precession -- eq. above)
 
       slon =slond/rad                                       !*** radians
+      write(*, *) "sunxyz::slon 947: ", slon
       sslon=dsin(slon)
       cslon=dcos(slon)
 
       rs1 = r*cslon              !*** meters             !*** eq. 3.46, p.71
       rs2 = r*sslon*cobe         !*** meters             !*** eq. 3.46, p.71
       rs3 = r*sslon*sobe         !*** meters             !*** eq. 3.46, p.71
+      write(*, *) "sunxyz::rs1, rs2, rs3 954: ", rs1, rs2, rs3  !*** MPZinke
 
 *** convert position vector of sun to ECEF  (ignore polar motion/LOD)
 
