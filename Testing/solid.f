@@ -75,31 +75,31 @@
       call setjd0(iyr,imo,idy)
 
       tdel2=1.d0/60.d0/24.d0                           !*** 1 minute steps
-      do iloop=0,60*24
-        lflag=.false.                           !*** false means flag not raised
-        call sunxyz (mjd,fmjd,rsun,lflag)                   !*** mjd/fmjd in UTC
+C       do iloop=0,60*24
+      lflag=.false.                           !*** false means flag not raised
+      call sunxyz (mjd,fmjd,rsun,lflag)                   !*** mjd/fmjd in UTC
 C       MPZinke on 2020.07.01: check output values
-        write(*,*) 'sunxyz: ', rsun(1), rsun(2), rsun(3)
-        call moonxyz(mjd,fmjd,rmoon,lflag)                  !*** mjd/fmjd in UTC
+      write(*,*) 'sunxyz: ', rsun(1), rsun(2), rsun(3)
+      call moonxyz(mjd,fmjd,rmoon,lflag)                  !*** mjd/fmjd in UTC
 C       MPZinke on 2020.07.01: check output values
-        write(*,*) 'moonxyz: ', rmoon(1), rmoon(2), rmoon(3)
-        call detide (xsta,mjd,fmjd,rsun,rmoon,etide,lflag)  !*** mjd/fmjd in UTC
-        xt = etide(1)
-        yt = etide(2)
-        zt = etide(3)
+      write(*,*) 'moonxyz: ', rmoon(1), rmoon(2), rmoon(3)
+      call detide (xsta,mjd,fmjd,rsun,rmoon,etide,lflag)  !*** mjd/fmjd in UTC
+      xt = etide(1)
+      yt = etide(2)
+      zt = etide(3)
 
 *** determine local geodetic horizon components (topocentric)
 
-        call rge(gla0,glo0,ut,vt,wt,xt,   yt,   zt)       !*** tide vector
+      call rge(gla0,glo0,ut,vt,wt,xt,   yt,   zt)       !*** tide vector
 
-        call mjdciv(mjd,fmjd               +0.001d0/86400.d0,
+      call mjdciv(mjd,fmjd               +0.001d0/86400.d0,
      *              iyr,imo,idy,ihr,imn,sec-0.001d0)
 
-        tsec=ihr*3600.d0+imn*60.d0+sec
-        write(lout,'(f8.1,3f10.6)') tsec,ut,vt,wt
-        fmjd=fmjd+tdel2
-        fmjd=(idnint(fmjd*86400.d0))/86400.d0      !*** force 1 sec. granularity
-      enddo
+      tsec=ihr*3600.d0+imn*60.d0+sec
+      write(lout,'(f8.1,3f10.6)') tsec,ut,vt,wt
+      fmjd=fmjd+tdel2
+      fmjd=(idnint(fmjd*86400.d0))/86400.d0      !*** force 1 sec. granularity
+C       enddo
 
 *** test flag and end of processing
 
@@ -924,6 +924,7 @@ C       MPZinke on 2020.07.01: check output values
 
       tjdtt = mjd+fmjdtt+2400000.5d0              !*** Julian Date, TT
       t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
+      write(*,*) "sunxyz::t 927: ", t
       emdeg = 357.5256d0 + 35999.049d0*t          !*** degrees
       em    = emdeg/rad                           !*** radians
       em2   = em+em                               !*** radians

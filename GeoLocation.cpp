@@ -11,7 +11,10 @@
 ********************************************************************************************************************************/
 
 #include"GeoLocation.h"
-#include<iostream>
+#ifdef _TESTING_
+	#include<iostream>
+#endif
+
 
 // ———————————————— CONSTRUCTORS & DESTRUCTOR —————————————————
 
@@ -170,6 +173,10 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	// LN898-905 replaced with defined values
 	// LN910: !*** TT  time (sec of day)
 	double centuries_TT = _datetime.modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
+
+	#ifdef _TESTING_
+		std::cout << "sunxyz::fmjdtt 920: " << centuries_TT << std::endl;
+	#endif
 
 	// *** julian centuries since 1.5 january 2000 (J2000)
 	// ***   (note: also low precision use of mjd --> tjd)
