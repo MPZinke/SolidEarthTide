@@ -752,6 +752,7 @@ C       enddo
 
       tjdtt = mjd+fmjdtt+2400000.5d0              !*** Julian Date, TT
       t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
+      write(*, *) "moonxyz::t: ", t
 
 *** el0 -- mean longitude of Moon (deg)
 *** el  -- mean anomaly of Moon (deg)
@@ -766,6 +767,7 @@ C       enddo
       elp=357.52543d0 +  35999.04944d0*t
       f  = 93.27283d0 + 483202.01873d0*t
       d  =297.85027d0 + 445267.11135d0*t
+      write(*, *) "mooxyz::el0, el, elp, f, d: ", el0, el, elp, f, d
 
 *** longitude w.r.t. equinox and ecliptic of year 2000
 
@@ -784,7 +786,6 @@ C       enddo
      * -  125.d0/3600.d0*dsin((d         )/rad)
      * -  110.d0/3600.d0*dsin((el+elp    )/rad)
      * -   55.d0/3600.d0*dsin((f+f-d-d   )/rad)
-
       write(*,*) "selond: ", selond
 
 *** latitude w.r.t. equinox and ecliptic of year 2000
@@ -956,6 +957,7 @@ C       enddo
 *** convert position vector of sun to ECEF  (ignore polar motion/LOD)
 
       call getghar(mjd,fmjd,ghar)                        !*** sec 2.3.1,p.33
+      write(*, *) "sunxyz::ghar 959: ", ghar
       call rot3(ghar,rs1,rs2,rs3,rs(1),rs(2),rs(3))      !*** eq. 2.89, p.37
 
       return
