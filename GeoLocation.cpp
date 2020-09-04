@@ -12,6 +12,7 @@
 
 #include"GeoLocation.h"
 #ifdef _TESTING_
+	#include<iostream>
 	#include"Testing/Test.h"
 #endif
 
@@ -244,6 +245,7 @@ void GeoLocation::calculate_geocentric_lunar_coordinates()
 	// ***   (note: also low precision use of mjd --> tjd)
 	double centuries_TT = _datetime.modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
 	#ifdef _TESTING_
+		std::cout << std::endl;
 		_TEST_matches("moonxyz::t: ", centuries_TT, .20496922110173593);
 	#endif
 	
@@ -270,10 +272,25 @@ void GeoLocation::calculate_geocentric_lunar_coordinates()
 	// LN767: *** eq 3.48, p.72
 	double lunar_ecliptic_longitude = lunar_ecliptic_longitude_for_year_2000(mean_lunar_longitude,
 		mean_lunar_anomaly, mean_solar_anomaly, mean_angular_distance, mean_solar_lunar_longitude);
+	#ifdef _TESTING_
+		_TEST_matches("moonxyz::selond: ", lunar_ecliptic_longitude, 98864.678088713539);
+	#endif
 
 	double lunar_ecliptic_latitude = lunar_ecliptic_latitude_for_year_2000(mean_lunar_longitude,
 		mean_lunar_anomaly, mean_solar_anomaly, mean_angular_distance, mean_solar_lunar_longitude,
 		lunar_ecliptic_longitude);
+	#ifdef _TESTING_
+		_TEST_matches("moonxyz::selatd: ", lunar_ecliptic_latitude, 3.6808653262959705);
+	#endif
+
+	// LN800: *** distance from Earth center to Moon (m)
+	double earth_moon_distance = distance_from_earth_to_moon(mean_lunar_longitude, mean_lunar_anomaly,
+		mean_solar_anomaly, mean_angular_distance, mean_solar_lunar_longitude, lunar_ecliptic_longitude);
+	#ifdef _TESTING_
+		_TEST_matches("moonxyz::rse: ", earth_moon_distance, 369323531.93645859);
+	#endif
+
+
 }
 
 
@@ -319,8 +336,6 @@ double mean_solar_anomaly, double mean_angular_distance, double mean_solar_lunar
 		- .0347222222 * sin(mean_solar_lunar_longitude)
 		- .0305555556 * sin(mean_lunar_anomaly + mean_solar_anomaly)
 		- .0152777778 * sin(mean_angular_distance + mean_angular_distance - mean_solar_lunar_longitude - mean_solar_lunar_longitude);
-
-	std::cout << "lunar_ecliptic_longitude: " << lunar_ecliptic_longitude << std::endl;
 
 	return lunar_ecliptic_longitude;
 }

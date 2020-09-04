@@ -67,11 +67,13 @@ int main(int arg_count, char* arg_variables[])
 
 	double sun[3];
 	geolocation.sun_coordinates(sun);
+	#ifdef _TESTING_
+		cout << "\nsunxyz: " << sun[X] << "\t" << sun[Y] << "\t" << sun[Z] << endl;
+	#endif
 	double moon[3];
 	geolocation.moon_coordinates(moon);
 
 	#ifdef _TESTING_
-		cout << "\nsunxyz: " << sun[X] << "\t" << sun[Y] << "\t" << sun[Z] << endl;
 		cout << "\nmoonxyz: " << moon[X] << "\t" << moon[Y] << "\t" << moon[Z] << endl;
 	#endif
 	// double ecef[3];  //TESTING

@@ -78,12 +78,15 @@ C       write(*,*) 'program solid -- UTC version -- 2018jun01'
       tdel2=1.d0/60.d0/24.d0                           !*** 1 minute steps
 C       do iloop=0,60*24
       lflag=.false.                           !*** false means flag not raised
+      write(*, *) ""
       call sunxyz (mjd,fmjd,rsun,lflag)                   !*** mjd/fmjd in UTC
 C       MPZinke on 2020.07.01: check output values
       write(*,*) 'sunxyz: ', rsun(1), rsun(2), rsun(3)
+      write(*, *) ""
       call moonxyz(mjd,fmjd,rmoon,lflag)                  !*** mjd/fmjd in UTC
 C       MPZinke on 2020.07.01: check output values
       write(*,*) 'moonxyz: ', rmoon(1), rmoon(2), rmoon(3)
+      write(*, *) ""
       call detide (xsta,mjd,fmjd,rsun,rmoon,etide,lflag)  !*** mjd/fmjd in UTC
       xt = etide(1)
       yt = etide(2)
@@ -786,7 +789,7 @@ C       enddo
      * -  125.d0/3600.d0*dsin((d         )/rad)
      * -  110.d0/3600.d0*dsin((el+elp    )/rad)
      * -   55.d0/3600.d0*dsin((f+f-d-d   )/rad)
-      write(*,*) "selond: ", selond
+      write(*,*) "moonxyz::selond: ", selond
 
 *** latitude w.r.t. equinox and ecliptic of year 2000
 
@@ -802,8 +805,7 @@ C       enddo
      * -   23.d0/3600.d0*dsin((elp+f-d-d )/rad)
      * +   21.d0/3600.d0*dsin((-el+f     )/rad)
      * +   11.d0/3600.d0*dsin((-elp+f-d-d)/rad)
-
-      write(*,*) "selatd: ", selatd
+      write(*,*) "moonxyz::selatd: ", selatd
 
 *** distance from Earth center to Moon (m)
 
@@ -816,6 +818,7 @@ C       enddo
      *   -    205.d0*1000.d0*dcos((elp-d-d   )/rad)
      *   -    171.d0*1000.d0*dcos((el+d+d    )/rad)
      *   -    152.d0*1000.d0*dcos((el+elp-d-d)/rad)
+      write(*, *) "moonxyz::rse: ", rse
 
 *** convert spherical ecliptic coordinates to equatorial cartesian
 
@@ -832,16 +835,20 @@ C       enddo
       cselat=dcos(selatd/rad)
       sselon=dsin(selond/rad)
       cselon=dcos(selond/rad)
+      write(*, *) "moonxyz::sselat, scelat, sselon, cselon: ", sselat, scelat, sselon, cselon
 
       t1 = rse*cselon*cselat        !*** meters          !*** eq. 3.51, p.72
       t2 = rse*sselon*cselat        !*** meters          !*** eq. 3.51, p.72
       t3 = rse*       sselat        !*** meters          !*** eq. 3.51, p.72
+      write(*, *) "moonxyz::t1, t2, t3", t1, t2, t3
 
       call rot1(-oblir,t1,t2,t3,rm1,rm2,rm3)             !*** eq. 3.51, p.72
+      write(*,*) "moonxyz::rm1, rm2, rm3: ", rm1, rm2, rm3
 
 *** convert position vector of moon to ECEF  (ignore polar motion/LOD)
 
       call getghar(mjd,fmjd,ghar)                        !*** sec 2.3.1,p.33
+      write(*, *) "moonxyz::ghar: ", ghar
       call rot3(ghar,rm1,rm2,rm3,rm(1),rm(2),rm(3))      !*** eq. 2.89, p.37
 
       return
