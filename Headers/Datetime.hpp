@@ -1,21 +1,23 @@
 
-/********************************************************************************************************************************
-*
-*	created by: MPZinke
-*	on ..
-*
-*	DESCRIPTION: TEMPLATE
-*	BUGS:
-*	FUTURE:
-*
-********************************************************************************************************************************/
+/***********************************************************************************************************************
+*                                                                                                                      *
+*   created by: MPZinke                                                                                                *
+*   on ..                                                                                                              *
+*                                                                                                                      *
+*   DESCRIPTION: TEMPLATE                                                                                              *
+*   BUGS:                                                                                                              *
+*   FUTURE:                                                                                                            *
+*                                                                                                                      *
+***********************************************************************************************************************/
+
 
 #ifndef _Datetime_
 #define _Datetime_
 
 
-#include"Global.h"
-#include"Date.h"
+#include "Global.hpp"
+#include "Date.hpp"
+
 
 enum
 {
@@ -73,5 +75,6 @@ class Datetime : public Date
 		double UTC_seconds_to_Terrestrial_Time(double);
 		double UTC_to_International_Atomic_Time(double);
 };
+
 
 #endif

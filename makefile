@@ -1,10 +1,11 @@
 CXX=g++
-FLAGS=-std=c++14
-C_FILES=Date.cpp Datetime.cpp GeoLocation.cpp SolidEarthFlexing.cpp
+FLAGS=-std=c++14 -Wall
+HEADER=-I./Headers/
+SOURCE=./Source/*.cpp
+
 
 all:
-	$(CXX) $(FLAGS) $(C_FILES) -o SolidEarthFlexing
-	gfortran solid.f -o solid
+	$(CXX) $(FLAGS) $(HEADER) $(SOURCE) -o SolidEarthFlexing
 
 
 cpp:

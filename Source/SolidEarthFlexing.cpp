@@ -1,21 +1,24 @@
 
-/***********************************************************************************************************
-*
-*	created by: MPZinke
-*	on ..
-*
-*	DESCRIPTION: TEMPLATE
-*	BUGS:
-*	FUTURE:
-*
-***********************************************************************************************************/
+/***********************************************************************************************************************
+*                                                                                                                      *
+*   created by: MPZinke                                                                                                *
+*   on 2021.08.07                                                                                                      *
+*                                                                                                                      *
+*   DESCRIPTION: TEMPLATE                                                                                              *
+*   BUGS:                                                                                                              *
+*   FUTURE:                                                                                                            *
+*                                                                                                                      *
+***********************************************************************************************************************/
 
-#include<iostream>
-#include<fstream>
 
-#include"Global.h"
-#include"Datetime.h"
-#include"GeoLocation.h"
+#include <iostream>
+#include <fstream>
+
+
+#include "Global.hpp"
+#include "Datetime.hpp"
+#include "GeoLocation.hpp"
+
 
 using namespace std;
 

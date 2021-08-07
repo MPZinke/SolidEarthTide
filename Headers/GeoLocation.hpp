@@ -1,21 +1,25 @@
 
-/********************************************************************************************************************************
-*
-*	created by: MPZinke
-*	on ..
-*
-*	DESCRIPTION: TEMPLATE
-*	BUGS:
-*	FUTURE:
-*
-********************************************************************************************************************************/
+/***********************************************************************************************************************
+*                                                                                                                      *
+*   created by: MPZinke                                                                                                *
+*   on ..                                                                                                              *
+*                                                                                                                      *
+*   DESCRIPTION: TEMPLATE                                                                                              *
+*   BUGS:                                                                                                              *
+*   FUTURE:                                                                                                            *
+*                                                                                                                      *
+***********************************************************************************************************************/
+
 
 #ifndef _GeoLocation_
 #define _GeoLocation_
 
-#include"Datetime.h"
 
-#include<cmath>
+#include "Datetime.hpp"
+#include "Global.hpp"
+
+
+#include <cmath>
 
 
 #define E_SQR .99330562  // flattening deformation of earth from rotation (even though the Earth is flat (JK))
@@ -25,6 +29,7 @@
 #define SIN_OBLIQUITY .397777  // sin(obliquity of the J2000 ecliptic)
 #define COS_OBLIQUITY .917482  // cos(obliquity of the J2000 ecliptic)
 #define OPOD 282.9400  // RAAN + arg.peri. (deg.)
+
 
 enum
 {
