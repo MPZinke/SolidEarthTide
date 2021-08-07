@@ -163,7 +163,7 @@ void Date::add_days(unsigned int days)
 		_year = original_date[YEAR];
 		_month = original_date[MONTH];
 		_day = original_date[DAY];
-		std::runtime_error("Year is out of range");
+		throw std::runtime_error("Year is out of range");
 	}
 }
 

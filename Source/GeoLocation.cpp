@@ -12,10 +12,6 @@
 
 
 #include "GeoLocation.hpp"
-#ifdef _TESTING_
-	#include <iostream>
-	#include "Testing/Test.hpp"
-#endif
 
 
 // ——————————————————————————————————————————— CONSTRUCTORS & DESTRUCTORS ——————————————————————————————————————————— //
@@ -175,10 +171,6 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	// LN910: !*** TT  time (sec of day)
 	double centuries_TT = _datetime.modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
 
-	#ifdef _TESTING_
-		_TEST_matches("sunxyz::t 927: ", centuries_TT, .20496922110173593);
-	#endif
-
 	// *** julian centuries since 1.5 january 2000 (J2000)
 	// ***   (note: also low precision use of mjd --> tjd)
 	double em_degrees = centuries_TT * 35999.049 + 357.5256;  // LN919: !*** degrees
@@ -188,19 +180,12 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	double radius = (149.619 - 2.499 * cos(em) - .021 * cos(2*em)) * 1000000000;  // meters
 	double solar_longitude_degrees = OPOD + em_degrees + (6892 * sin(em) + 72 * sin(2*em)) / SECONDS_IN_HOUR;
 
-	#ifdef _TESTING_
-		_TEST_matches("sunxyz::slond 936: ", solar_longitude_degrees, 8019.2861275464174);
-	#endif
-
 	// LN928: *** precession of equinox wrt. J2000   (p.71)
 	solar_longitude_degrees += 1.3972 * centuries_TT;
 
 	// LN932: *** position vector of sun (mean equinox & ecliptic of J2000) (EME2000, ICRF)
 	// ***	lus long. advance due to precession -- eq. above)
 	double solar_longitude = solar_longitude_degrees / RADIAN;
-	#ifdef _TESTING_
-		_TEST_matches("sunxyz::slon 947: ", solar_longitude, 139.96794491138800);
-	#endif
 	double sin_solar_longitude = sin(solar_longitude);
 	double cos_solar_longitude = cos(solar_longitude);
 
@@ -211,16 +196,8 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	// LN941: !*** meters	*** eq. 3.46, p.71
 	solar_radius[Z] = radius * sin_solar_longitude * SIN_OBLIQUITY;
 
-	#ifdef _TESTING_
-		_TEST_matches("sunxyz::rs1, rs2, rs3 953: ", solar_radius[X], solar_radius[Y], solar_radius[Z], 
-				-25292199245.036648, 137598471385.21024, 59656238381.205788);
-	#endif
-
 	// LN943: *** convert position vector of sun to ECEF  (ignore polar motion/LOD)
 	double greenwhich_hour_angle = _datetime.greenwhich_hour_angle_radians();  // LN945 !*** sec 2.3.1,p.33
-	#ifdef _TESTING_
-		std::cout << "sunxyz::ghar 959: " << greenwhich_hour_angle << std::endl;
-	#endif
 
 	// LN946: !*** eq. 2.89, p.37
 	rotate_around_3_axis(solar_radius, _sun, greenwhich_hour_angle);
@@ -244,10 +221,6 @@ void GeoLocation::calculate_geocentric_lunar_coordinates()
 	// LN745-749: *** julian centuries since 1.5 january 2000 (J2000)
 	// ***   (note: also low precision use of mjd --> tjd)
 	double centuries_TT = _datetime.modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
-	#ifdef _TESTING_
-		std::cout << std::endl;
-		_TEST_matches("moonxyz::t: ", centuries_TT, .20496922110173593);
-	#endif
 	
 	// mean_lunar_longitude *** el0 -- mean longitude of Moon (deg)
 	// mean_lunar_anomaly *** el  -- mean anomaly of Moon (deg)
@@ -260,35 +233,19 @@ void GeoLocation::calculate_geocentric_lunar_coordinates()
 	double mean_solar_anomaly = 357.52543 + 35999.04944 * centuries_TT;
 	double mean_angular_distance = 93.27283 + 483202.01873 * centuries_TT;
 	double mean_solar_lunar_longitude = 297.85027 + 445267.11135 * centuries_TT;
-	#ifdef _TESTING_
-		_TEST_matches("mooxyz::el0, el, elp, f, d: ", mean_lunar_longitude, mean_lunar_anomaly, 
-				mean_solar_anomaly, mean_angular_distance, mean_solar_lunar_longitude, 
-				98863.132472263300, 97946.043108254569, 7736.2225541196831, 99134.814243874527,
-				91563.903265629429);
-	#endif
-
 
 	// LN765: *** longitude w.r.t. equinox and ecliptic of year 2000
 	// LN767: *** eq 3.48, p.72
 	double lunar_ecliptic_longitude = lunar_ecliptic_longitude_for_year_2000(mean_lunar_longitude,
 		mean_lunar_anomaly, mean_solar_anomaly, mean_angular_distance, mean_solar_lunar_longitude);
-	#ifdef _TESTING_
-		_TEST_matches("moonxyz::selond: ", lunar_ecliptic_longitude, 98864.678088713539);
-	#endif
 
 	double lunar_ecliptic_latitude = lunar_ecliptic_latitude_for_year_2000(mean_lunar_longitude,
 		mean_lunar_anomaly, mean_solar_anomaly, mean_angular_distance, mean_solar_lunar_longitude,
 		lunar_ecliptic_longitude);
-	#ifdef _TESTING_
-		_TEST_matches("moonxyz::selatd: ", lunar_ecliptic_latitude, 3.6808653262959705);
-	#endif
 
 	// LN800: *** distance from Earth center to Moon (m)
 	double earth_moon_distance = distance_from_earth_to_moon(mean_lunar_longitude, mean_lunar_anomaly,
 		mean_solar_anomaly, mean_angular_distance, mean_solar_lunar_longitude, lunar_ecliptic_longitude);
-	#ifdef _TESTING_
-		_TEST_matches("moonxyz::rse: ", earth_moon_distance, 369323531.93645859);
-	#endif
 }
 
 

@@ -1,5 +1,5 @@
 # SolidEarthFlexing
-_created by: MPZinke_
+_created by: MPZinke_ <br/>
 C++ translated version of solid.f by Dennis Milbert https://geodesyworld.github.io/SOFTS/solid.htm
 
 ## About
