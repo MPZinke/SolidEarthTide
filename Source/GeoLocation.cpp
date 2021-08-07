@@ -18,7 +18,7 @@
 #endif
 
 
-// ———————————————— CONSTRUCTORS & DESTRUCTOR —————————————————
+// ——————————————————————————————————————————— CONSTRUCTORS & DESTRUCTORS ——————————————————————————————————————————— //
 
 GeoLocation::GeoLocation(double latitude, double longitude, Datetime datetime)
 : GeoLocation(latitude, longitude, 0, datetime)
@@ -61,7 +61,7 @@ GeoLocation::~GeoLocation()
 }
 
 
-// —————————————————————— GETTERS ——————————————————————
+// ———————————————————————————————————————————————————— GETTERS ————————————————————————————————————————————————————— //
 
 Datetime* GeoLocation::datetime()
 {
@@ -149,13 +149,12 @@ void GeoLocation::tide_coordinates(double copy_array[])
 }
 
 
-// —————————————————————— SETTERS ——————————————————————
+// ———————————————————————————————————————————————————— SETTERS ————————————————————————————————————————————————————— //
 
 
 
 
-
-// ———————————————————— SUN, MOON, TIDE ————————————————————
+// ———————————————————————————————————————————————— SUN, MOON, TIDE ————————————————————————————————————————————————— //
 
 // solid.f: LN880: subroutine sunxyz(mjd,fmjd,rs,lflag)
 // ARGS:	mjd = _modified_julian, fmjd = _fractional_modified_julian, rs = _sun,
@@ -290,8 +289,6 @@ void GeoLocation::calculate_geocentric_lunar_coordinates()
 	#ifdef _TESTING_
 		_TEST_matches("moonxyz::rse: ", earth_moon_distance, 369323531.93645859);
 	#endif
-
-
 }
 
 
@@ -329,7 +326,7 @@ double mean_solar_anomaly, double mean_angular_distance, double mean_solar_lunar
 		+ .6583333333 * sin(mean_solar_lunar_longitude + mean_solar_lunar_longitude)
 		- .1855555556 * sin(mean_solar_anomaly) 
 		- .1144444444 * sin(mean_angular_distance + mean_angular_distance)
-		- .0588888889 * sin(mean_lunar_anomaly + mean_lunar_anomaly - mean_solar_lunar_longitude - mean_solar_lunar_longitude )
+		- .0588888889 * sin(mean_lunar_anomaly + mean_lunar_anomaly - mean_solar_lunar_longitude - mean_solar_lunar_longitude)
 		- .0572222222 * sin(mean_lunar_anomaly + mean_solar_anomaly - mean_solar_lunar_longitude - mean_solar_lunar_longitude)
 		+ .0533333333 * sin(mean_lunar_anomaly + mean_solar_lunar_longitude + mean_solar_lunar_longitude)
 		- .0458333333 * sin(mean_solar_anomaly - mean_solar_lunar_longitude - mean_solar_lunar_longitude)
@@ -426,7 +423,7 @@ double lunar_ecliptic_longitude)
 }
 
 
-// ————————————————————— TRANSFORMS —————————————————————
+// ——————————————————————————————————————————————————— TRANSFORMS ——————————————————————————————————————————————————— //
 
 // solid.f: LN1025: subroutine rot3(theta,x,y,z,u,v,w)
 // ARGS:	theta = theta, x = initial[X], y = initial[Y], z = initial[Z], u = transformed[X], v = transformed[Y],

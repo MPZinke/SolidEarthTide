@@ -73,7 +73,7 @@ Datetime Date::datetime(int hour, int minute, double second)
 }
 
 
-// —————————————————————— GETTERS ——————————————————————
+// ———————————————————————————————————————————————————— GETTERS ————————————————————————————————————————————————————— //
 
 int Datetime::hour()
 {
@@ -113,7 +113,7 @@ void Datetime::time_array(int copy_array[])
 }
 
 
-// —————————————————————— SETTERS ——————————————————————
+// ———————————————————————————————————————————————————— SETTERS ————————————————————————————————————————————————————— //
 
 void Datetime::hour(int hour)
 {
@@ -167,7 +167,7 @@ void Datetime::add_time(double seconds)
 }
 
 
-// ——————————————————— TIME CONVERSION ————————————————————
+// ————————————————————————————————————————————————— TIME CONVERSION ———————————————————————————————————————————————— //
 
 // solid.f: LN1152: subroutine civmjd(iyr,imo,idy,ihr,imn,sec,mjd,fmjd)
 // ARGS: 	iyr = _year, imo = _month, idy = _day, ihr = _hour, imn = _minute, sec = _second, 
@@ -320,7 +320,7 @@ double Datetime::UTC_to_International_Atomic_Time(double seconds_UTC)
 			return normalized_seconds_UTC - (x - 37);
 	}
 	
-	throw std::runtime_error("FATAL ERROR --\nFell through tests in ");
+	throw std::runtime_error("FATAL ERROR --\nFell through tests in Datetime::UTC_to_International_Atomic_Time");
 }
 
 

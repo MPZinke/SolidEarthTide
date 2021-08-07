@@ -53,7 +53,7 @@ Date::~Date()
 }
 
 
-// ——————————————————————————————————————————— GETTERS ———————————————————————————————————————————
+// ———————————————————————————————————————————————————— GETTERS ————————————————————————————————————————————————————— //
 
 // gets the _year attr.
 int Date::year()
@@ -102,7 +102,7 @@ void Date::date_array(int copy_array[])
 
 
 
-// —————————————————————— SETTERS ——————————————————————
+// ———————————————————————————————————————————————————— SETTERS ————————————————————————————————————————————————————— //
 
 // sets _year attribute.
 // takes new year value.
@@ -168,7 +168,7 @@ void Date::add_days(unsigned int days)
 }
 
 
-// ——————————————————— TIME CONVERSION ————————————————————
+// ———————————————————————————————————————————————— TIME CONVERSION ————————————————————————————————————————————————— //
 
 // solid.f: LN1152: subroutine civmjd(iyr,imo,idy,ihr,imn,sec,mjd,fmjd)
 // ARGS: 	iyr = _year, imo = _month, idy = _day, ihr = _hour, imn = _minute, sec = _second, 
