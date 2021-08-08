@@ -10,7 +10,8 @@ FILENAME = "../solid.f";
 
 # Variables
 TOKEN_REGEX = r"[a-zA-Z_][a-zA-Z0-9_]*"
-VARIABLE_DECLARE_AND_ASSIGNMENT_REGEX = r"      [ \t]*"+TOKEN_REGEX+r"[ \t]*=";
+VARIABLE_DECLARE_OR_ASSIGNMENT_REGEX = r"      [ \t]*"+TOKEN_REGEX+r"[ \t]*(\([a-zA-Z]?[0-9]*\))?[ \t]*="
+# VARIABLE_DECLARE_OR_ASSIGNMENT_REGEX = r"      [ \t]*"+TOKEN_REGEX+r"[ \t]*=";
 
 PARAM_REGEX = r"[a-zA-Z0-9 \t,_]*";
 
@@ -30,7 +31,8 @@ FUNCTION_CALL_LINE_START = r"(      [ \t]*"+TOKEN_REGEX+r".*=|     \*[ \t]*[\+\-
 # —————————————————————————————————————————————————————  UTILITY ————————————————————————————————————————————————————— #
 
 def is_symbol(token):
-	return token == "if" or token == "elseif" or token == "while" or token == "do";
+	return token == "if" or token == "elseif" or token == "while" or token == "do" or token == "read" \
+		or token == "write";
 
 
 # —————————————————————————————————————————————————————  CLASSES ————————————————————————————————————————————————————— #
@@ -44,7 +46,7 @@ class Call:
 
 	def assign_block(self, blocks):
 		for block in blocks:
-			if(isinstance(block, ComplexBlock) and block.name == self.name):
+			if(block.is_complex and block.name == self.name):
 				self.block = block;
 				break;  # why waste the clock cycles
 
@@ -57,6 +59,7 @@ class Block:
 	# —————————————————————————————————————————————————  CONSTRUCTOR ————————————————————————————————————————————————— #
 
 	def __init__(self, line_number, lines):
+		self.is_complex = isinstance(self, ComplexBlock);
 		self.line_number = line_number;
 		self.lines = lines;
 		self.calls = [];
@@ -86,10 +89,12 @@ class Block:
 
 	def get_variables(self):
 		for line in self.lines:
+			# defined variables at top EG. double precision xsta(3),xsun(3),xmon(3),dxtide(3),xcorsta(3)
 			if(line[:23] == "      double precision "):
 				declared_vars = re.findall(TOKEN_REGEX, line[23:])
-				self.variables += declared_vars if declared_vars else [];
-			elif(re.match(VARIABLE_DECLARE_AND_ASSIGNMENT_REGEX, line)):
+				self.variables += [var for var in declared_vars if var not in self.variables] if declared_vars else [];
+			# declared variables  EG. scsun=scs/rsta/rsun
+			elif(re.match(VARIABLE_DECLARE_OR_ASSIGNMENT_REGEX, line)):
 				variable = line[:line.find('=')].strip();
 				if(variable not in self.variables): self.variables.append(variable);
 
@@ -101,7 +106,7 @@ class Block:
 
 
 	def print_calls(self, recurrsion=0):
-		print("{}{}".format('|  ' * (recurrsion), self.name if isinstance(self, ComplexBlock) else "MAIN"));
+		print("{}{}".format('|  ' * (recurrsion), self.name if self.is_complex else "MAIN"));
 		for call in self.calls: 
 			if(call.block): call.block.print_calls(recurrsion+1);
 
@@ -137,6 +142,12 @@ class ComplexBlock(Block):
 		param_string = first_line[first_line.find('('): first_line.find(')')];
 		param_search = re.findall(r"[a-zA-Z0-9_]+", param_string);
 		self.params = param_search if param_search else [];
+		self.variables += [param for param in self.params if param not in self.variables];
+
+
+	def get_changed_params(self):
+		for line in lines:
+			if(re.match()): pass
 
 
 	def __str__(self):
@@ -194,7 +205,15 @@ def print_block_calls(blocks):
 
 def print_block_names(blocks):
 	for block in blocks:
-		if(isinstance(block, ComplexBlock)): print(block.name, "Function" if isinstance(block, Function) else "Subroutine");
+		if(block.is_complex): print(block.name, "Function" if isinstance(block, Function) else "Subroutine");
+
+
+def print_block_signatures(blocks):
+	for block in blocks:
+		if(block.is_complex): 
+			block_type = "Function" if isinstance(block, Function) else "Subroutine"
+			info = "{}\n\tType: {}\n\tParams: {}".format(block.name, block_type, ", ".join(block.params));
+			print(info);
 
 
 def main():
@@ -202,13 +221,14 @@ def main():
 	blocks = parse_code_blocks(lines);
 
 	block = blocks[1];
-	# print(block.name if(isinstance(block, ComplexBlock)) else "Main", end="\n------------------\n")
+	print(block.name if(block.is_complex) else "Main", end="\n------------------\n")
 	# print("--------- VARS ---------");
 	# block.print_variables();
 	# print("--------- CALLS ---------");
 	# block.print_calls();
 	print_block_calls(blocks);
 	# print_block_names(blocks);
+	print_block_signatures(blocks);
 
 
 main();
