@@ -133,6 +133,7 @@ class ComplexBlock(Block):
 		self.params = None;
 
 
+
 	# Get block's name & parameters
 	def get_signature_info(self):
 		first_line = self.lines[0];
@@ -145,11 +146,6 @@ class ComplexBlock(Block):
 		self.variables += [param for param in self.params if param not in self.variables];
 
 
-	def get_changed_params(self):
-		for line in lines:
-			if(re.match()): pass
-
-
 	def __str__(self):
 		return 	"NAME: {}\n".format(self.name) \
 				+ "PARAMS: \n{}\n".format("\n\t".join(self.params)) \
@@ -160,8 +156,19 @@ class ComplexBlock(Block):
 class Subroutine(ComplexBlock):
 	def __init__(self, line_number, lines):
 		ComplexBlock.__init__(self, line_number, lines, 16);
+		self.altered_params = [];
 		self.get_signature_info();
+		self.get_changed_params();
 
+
+	def get_changed_params(self):
+		for line in self.lines:
+			match = re.match(VARIABLE_DECLARE_OR_ASSIGNMENT_REGEX, line);
+			if(not match): continue;
+			# get token from string
+			token_match = re.search(TOKEN_REGEX, line).span();
+			token = line[token_match[0]: token_match[1]];
+			if(token in self.params): self.altered_params.append(token);
 
 
 class Function(ComplexBlock):
@@ -211,9 +218,10 @@ def print_block_names(blocks):
 def print_block_signatures(blocks):
 	for block in blocks:
 		if(block.is_complex): 
-			block_type = "Function" if isinstance(block, Function) else "Subroutine"
+			block_type = "Function" if isinstance(block, Function) else "Subroutine";
 			info = "{}\n\tType: {}\n\tParams: {}".format(block.name, block_type, ", ".join(block.params));
 			print(info);
+			if(isinstance(block, Subroutine)): print("\tAltered Params: {}".format(", ".join(block.altered_params)));
 
 
 def main():
