@@ -65,10 +65,6 @@ int main(int arg_count, char* arg_variables[])
 	double moon[3];
 	geolocation.moon_coordinates(moon);
 
-	// double ecef[3];  //TESTING
-	// geolocation.ECEF_coordinates(ecef);  //TESTING
-
-
 	// for(int x = 0; x < MAX_STEPS; x += STEP_SIZE)
 	// {
 

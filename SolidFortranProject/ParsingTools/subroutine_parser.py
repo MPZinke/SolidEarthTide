@@ -11,7 +11,7 @@ class Subroutine:
 
 	def getlines(self):
 		lines = []
-		with open("solid.f") as file:
+		with open("../solid.f") as file:
 			for x, line in enumerate(file):
 				if(self.start <= x):
 					if("      return" in line): 
@@ -22,7 +22,7 @@ class Subroutine:
 
 
 def get_lines_from_file():
-	with open("solid.f", "r") as file:
+	with open("../solid.f", "r") as file:
 		return file.readlines()
 
 
@@ -42,7 +42,7 @@ def parameter_for_line_if_line_changes_parameter(line, parameters):
 
 
 def determine_if_parameter_is_changed_in_subroutine(subroutine):
-	with open("solid.f") as file:
+	with open("../solid.f", "r") as file:
 		for x, line in enumerate(file):
 			if(subroutine.start <= x):
 				altered_param = parameter_for_line_if_line_changes_parameter(line, subroutine.parameters)
