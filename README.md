@@ -83,7 +83,6 @@ MAIN
 
 #### Subroutine/Functions
 
-```txt
 1. `detide` [Subroutine]
     - Params: `xsta`, `mjd`, `fmjd`, `xsun`, `xmon`, `dxtide`, `lflag`
     - Altered Params: `lflag`, `dxtide`
@@ -161,4 +160,3 @@ MAIN
     - Params: `ttai`
 28. `gps2tai` [Function]
     - Params: `tgps`
-```
