@@ -39,27 +39,48 @@ make test
 
 ```txt
 MAIN
+|  *datan
 |  geoxyz
+|  |  *dsin
+|  |  *dcos
+|  |  *dsqrt
+|  |  *dcos
+|  |  *dsin
 |  civmjd
 |  mjdciv
 |  setjd0
 |  sunxyz
+|  |  *dsin
+|  |  *dcos
 |  |  utc2ttt
 |  |  |  utc2tai
 |  |  |  tai2tt
+|  |  *dcos
+|  |  *dcos
+|  |  *dsin
+|  |  *dsin
+|  |  *dsin
+|  |  *dcos
 |  |  getghar
 |  |  rot3
+|  |  |  *dsin
+|  |  |  *dcos
 |  moonxyz
 |  |  utc2ttt
 |  |  |  utc2tai
 |  |  |  tai2tt
 |  |  rot1
+|  |  |  *dsin
+|  |  |  *dcos
 |  |  getghar
 |  |  rot3
+|  |  |  *dsin
+|  |  |  *dcos
 |  detide
 |  |  utc2ttt
 |  |  |  utc2tai
 |  |  |  tai2tt
+|  |  *int
 |  |  sprod
 |  |  sprod
 |  |  zero_vec8
@@ -76,8 +97,27 @@ MAIN
 |  |  |  enorm8
 |  |  |  enorm8
 |  |  step2diu
+|  |  |  *dmod
+|  |  |  *dmod
+|  |  |  *dmod
+|  |  |  *dmod
+|  |  |  *dmod
+|  |  |  *dmod
 |  |  step2lon
+|  |  |  *dmod
+|  |  |  *dmod
+|  |  |  *dmod
+|  |  |  *dmod
+|  |  |  *dmod
+|  |  |  *cos
+|  |  |  *sin
+|  |  |  *cos
+|  |  |  *sin
 |  rge
+|  |  *dsin
+|  |  *dcos
+|  |  *dsin
+|  |  *dcos
 |  mjdciv
 ```
 

@@ -16,35 +16,40 @@
 
 // ——————————————————————————————————————————— CONSTRUCTORS & DESTRUCTORS ——————————————————————————————————————————— //
 
+// LN969:      subroutine geoxyz(gla,glo,eht,x,y,z)
+// LN971: *** convert geodetic lat, long, ellip ht. to x,y,z
+// Constructor for Geolocation to default altitude to 0 by calling GeoLocation::Geolocation(....).
 GeoLocation::GeoLocation(double latitude, double longitude, Datetime datetime)
 : GeoLocation(latitude, longitude, 0, datetime)
 {}
 
 
+// LN969:      subroutine geoxyz(gla,glo,eht,x,y,z)
+// LN971: *** convert geodetic lat, long, ellip ht. to x,y,z
+// Constructor for Geolocation with altitude parameter.
+// Converts LLA (Latitude, Longitude, Altitude) to ECEF.
+// Formula from solid.f confirmed by: http://danceswithcode.net/engineeringnotes/geodetic_to_ecef/geodetic_to_ecef.html
+// Labels: https://en.wikipedia.org/wiki/Geographic_coordinate_conversion#From_geodetic_to_ECEF_coordinates
 GeoLocation::GeoLocation(double latitude, double longitude, double altitude, Datetime datetime)
 : _latitude{latitude}, _longitude{longitude}, _altitude{altitude}, _datetime{datetime}
 {
-	// prime vertical radius (the appox radius for the rotational deformation of Earth)
-	// N(lat) = 1 / ((cos(lat)^2) + E_SQR * (sin(lat)^2)) ^ .5
-	// http://mathforum.org/library/drmath/view/51832.html
-	double cos_latitude = cos(_latitude * RADIAN);
-	double cos_latitude_squ = cos_latitude * cos_latitude;
+	// LN976-980
+	//      sla=dsin(gla)
+	//      cla=dcos(gla)
+	//      w2=1.d0-e2*sla*sla
+	//      w=dsqrt(w2)
+	//      en=a/w
 	double sin_latitude = sin(_latitude * RADIAN);
-	double sin_latitude_squ = sin_latitude * sin_latitude;
-	double inverse_prime_vertical_radius = pow(cos_latitude_squ + E_SQR * sin_latitude_squ, .5);
-	_prime_vertical_radius = 1 / inverse_prime_vertical_radius;
+	double cos_latitude = cos(_latitude * RADIAN);
+	double _prime_vertical_radius = EQUITORIAL_RADIUS / EC pow((double)1.0 - E_SQR * sin_latitude * sin_latitude, 0.5);
 
-	// convert geodetic coordinates to ECEF (X, Y, Z) coordinates in 
-	// take latitude, longitude, height, ECEF array pointer as (double)
-	// X = (N(FI) + h) * cos(FI) * cos(LMDA)
-	// Y = (N(FI) + h) * cos(FI) * sin(LMDA)
-	// Z = ((e^2) * N(FI) + h) * sin(LMDA)
-	// insert X, Y, Z into ECEF array
-	double latitude_radians = _latitude * RADIAN;
-	double longitude_radians = _longitude * RADIAN;
-	_ECEF[X] = (EQUITORIAL_RADIUS * _prime_vertical_radius + altitude) * cos(latitude_radians) * cos(longitude_radians);
-	_ECEF[Y] = (EQUITORIAL_RADIUS * _prime_vertical_radius + altitude) * cos(latitude_radians) * sin(longitude_radians);
-	_ECEF[Z] = (EQUITORIAL_RADIUS * E_SQR * _prime_vertical_radius + altitude) * sin(latitude_radians);
+	// LN982-984
+	//      x=(en+eht)*cla*dcos(glo)
+	//      y=(en+eht)*cla*dsin(glo)
+	//      z=(en*(1.d0-e2)+eht)*sla
+	_ECEF[X] = (_prime_vertical_radius+_altitude) * cos_latitude * cos(_longitude * RADIAN);
+	_ECEF[Y] = (_prime_vertical_radius+_altitude) * cos_latitude * sin(_longitude * RADIAN);
+	_ECEF[Z] = (_prime_vertical_radius * ONE_MINUS_E_SQR + _altitude) * sin_latitude;
 }
 
 

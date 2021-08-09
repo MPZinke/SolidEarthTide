@@ -95,6 +95,11 @@ class Call:
 				break;  # why waste the clock cycles
 
 
+	def print_call(self, recursion=0, signature=False):
+		if(self.block): self.block.print_calls(recursion, signature);
+		# else: print("{}*{}".format("|  " * (recursion), self.name));
+
+
 
 # Used to store data about a code block (ComplexBlock inherits from here).
 class Block:
@@ -134,7 +139,7 @@ class Block:
 			elif(re.match(FUNCTION_CALL_LINE_START, line)):
 				matches = re.findall(FUNCTION_CALL, line);
 				for x in range(len(matches)): matches[x] = matches[x][:matches[x].find('(')].strip();  # convert token
-				self.calls = [Call(token, x) for token in matches if(self.is_not_var(token) and not is_keyword(token))];
+				self.calls += [Call(token, x) for token in matches if(self.is_not_var(token) and not is_keyword(token))];
 
 
 	# Gets the variables within a codeblock.
@@ -147,9 +152,10 @@ class Block:
 			line = strip_comment(self.lines[x]);
 			# defined variables at top EG. double precision xsta(3),xsun(3),xmon(3),dxtide(3),xcorsta(3)
 			if(re.match(VARIABLE_DECLARATION_REGEX, line)):
-				variables = re.findall(TOKEN_REGEX, substr(line, re.match(VARIABLE_DECLARATION_REGEX, line).span()));
+				variables_substr = line[re.match(VARIABLE_DECLARATION_REGEX, line).span()[1] :];
+				variables = re.findall(TOKEN_REGEX, variables_substr);
 				self.variables += [var for var in variables if var not in self.variables] if variables else [];
-			# declared variables  EG. scsun=scs/rsta/rsun
+			# assigned variables  EG. scsun=scs/rsta/rsun
 			elif(re.match(VARIABLE_ASSIGNMENT_REGEX, line)):
 				variable = substr(line, re.search(TOKEN_REGEX, line).span());
 				if(variable not in self.variables): self.variables.append(variable);
@@ -165,9 +171,7 @@ class Block:
 		if(signature): self.print_signature(recursion)
 		else: print("{}{}".format("|  " * recursion, self.name if self.is_complex else "MAIN"));
 
-		for call in self.calls:
-			if(call.block): call.block.print_calls(recursion+1, signature);
-			else: print("{}{}".format("|  " * (recursion+1), call.name));
+		for call in self.calls: call.print_call(recursion+1, signature);
 
 
 	def print_signature(self, recursion=0):
@@ -194,6 +198,9 @@ class ComplexBlock(Block):
 		self.offset = offset;
 		self.name = None;
 		self.params = [];
+		self.get_signature_info();
+		self.get_calls();
+
 
 
 	# Get block's name & parameters.
@@ -218,9 +225,7 @@ class ComplexBlock(Block):
 class Subroutine(ComplexBlock):
 	def __init__(self, line_number, lines):
 		ComplexBlock.__init__(self, line_number, lines, 16);
-		self.altered_params = [];  # passed params that are affected in the 	
-		self.get_signature_info();
-		self.get_calls();
+		self.altered_params = [];  # passed params that are affected in the 
 		self.get_changed_params();
 
 
@@ -240,7 +245,7 @@ class Subroutine(ComplexBlock):
 	def print_signature(self, recursion=0):
 		tab = "|  " * recursion;
 		args = [tab, self.name, tab, ", ".join(self.params), tab, ", ".join(self.altered_params)];
-		print("{}{} [Subroutine]\n{}   Params: {}\n{}   Altered Params: {}".format(*args));
+		print("{}{} [Subroutine]\n{}|- Params: {}\n{}|- Altered Params: {}".format(*args));
 
 
 
@@ -248,13 +253,12 @@ class Subroutine(ComplexBlock):
 class Function(ComplexBlock):
 	def __init__(self, line_number, lines):
 		ComplexBlock.__init__(self, line_number, lines, 31);
-		self.get_signature_info();
 
 
 	def print_signature(self, recursion=0):
 		tab = "|  " * recursion;
 		args = [tab, self.name, tab, ", ".join(self.params)];
-		print("{}{} [Function]\n{}   Params: {}".format(*args));
+		print("{}{} [Function]\n{}|- Params: {}".format(*args));
 
 
 
@@ -312,8 +316,9 @@ def main():
 	blocks = parse_code_blocks(lines);
 
 	print_block_calls(blocks, True);
-	print_block_names(blocks);
-	print_block_signatures(blocks);
+	# for block in blocks: print(block.name, [call.name for call in block.calls])
+	# print_block_names(blocks);
+	# print_block_signatures(blocks);
 
 
 main();

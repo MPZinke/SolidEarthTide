@@ -22,7 +22,10 @@
 #include <cmath>
 
 
-#define E_SQR .99330562  // flattening deformation of earth from rotation (even though the Earth is flat (JK))
+// E_SQR: geodetic ellipsoid (Moritz, 1980b)
+// E_SQR: square of the first numerical eccentricity of the ellipsoid
+#define E_SQR .00669438002290341574957
+#define ONE_MINUS_E_SQR 0.99330561997709658425043  // rotational flattening deform.: 1.0 - 6.69438002290341574957d-03
 #define TO_RADIANS .0174532825  // used with sine & cosine: http://www.cplusplus.com/reference/cmath/cos/
 #define EQUITORIAL_RADIUS 6378137.0  // KM: https://www.space.com/17638-how-big-is-earth.html
 #define POLAR_RADIUS 6356000.0  // KM: https://www.space.com/17638-how-big-is-earth.html
