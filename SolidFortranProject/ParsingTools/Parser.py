@@ -105,10 +105,16 @@ class Block:
 		return ""
 
 
-	def print_calls(self, recurrsion=0):
-		print("{}{}".format('|  ' * (recurrsion), self.name if self.is_complex else "MAIN"));
-		for call in self.calls: 
-			if(call.block): call.block.print_calls(recurrsion+1);
+	def print_calls(self, recurrsion=0, signature=False):
+		if(signature): self.print_signature(recurrsion)
+		else: print("{}{}".format("|  " * recurrsion, self.name if self.is_complex else "MAIN"));
+
+		for call in self.calls:
+			if(call.block): call.block.print_calls(recurrsion+1, signature);
+
+
+	def print_signature(self, recurrsion=0):
+		print("{}MAIN".format("|  " * recurrsion))
 
 
 	def print_variables(self):
@@ -168,13 +174,26 @@ class Subroutine(ComplexBlock):
 			# get token from string
 			token_match = re.search(TOKEN_REGEX, line).span();
 			token = line[token_match[0]: token_match[1]];
-			if(token in self.params): self.altered_params.append(token);
+			if(token in self.params and token not in self.altered_params): self.altered_params.append(token);
+
+
+	def print_signature(self, recurrsion=0):
+		tab = "|  " * recurrsion;
+		args = [tab, self.name, tab, ", ".join(self.params), tab, ", ".join(self.altered_params)];
+		print("{}{} [Subroutine]\n{}   Params: {}\n{}   Altered Params: {}".format(*args));
 
 
 class Function(ComplexBlock):
 	def __init__(self, line_number, lines):
 		ComplexBlock.__init__(self, line_number, lines, 31);
 		self.get_signature_info();
+
+
+	def print_signature(self, recurrsion=0):
+		tab = "|  " * recurrsion;
+		args = [tab, self.name, tab, ", ".join(self.params)];
+		print("{}{} [Function]\n{}   Params: {}".format(*args));
+
 
 
 # —————————————————————————————————————————————————————  CLASSES ————————————————————————————————————————————————————— #
@@ -206,8 +225,8 @@ def get_file_contents(filename):
 		return file.readlines();
 
 
-def print_block_calls(blocks):
-	blocks[0].print_calls();
+def print_block_calls(blocks, signature=False):
+	blocks[0].print_calls(0, signature);
 
 
 def print_block_names(blocks):
@@ -218,24 +237,14 @@ def print_block_names(blocks):
 def print_block_signatures(blocks):
 	for block in blocks:
 		if(block.is_complex): 
-			block_type = "Function" if isinstance(block, Function) else "Subroutine";
-			info = "{}\n\tType: {}\n\tParams: {}".format(block.name, block_type, ", ".join(block.params));
-			print(info);
-			if(isinstance(block, Subroutine)): print("\tAltered Params: {}".format(", ".join(block.altered_params)));
+			block.print_signature();
 
 
 def main():
 	lines = get_file_contents(FILENAME);
 	blocks = parse_code_blocks(lines);
 
-	block = blocks[1];
-	print(block.name if(block.is_complex) else "Main", end="\n------------------\n")
-	# print("--------- VARS ---------");
-	# block.print_variables();
-	# print("--------- CALLS ---------");
-	# block.print_calls();
-	print_block_calls(blocks);
-	# print_block_names(blocks);
+	# print_block_calls(blocks, True);
 	print_block_signatures(blocks);
 
 
