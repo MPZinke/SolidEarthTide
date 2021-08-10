@@ -281,12 +281,20 @@ def parse_code_blocks(lines: list) -> list:
 			blocks.append(block_constructors[block_type](block_start, lines[block_start: index+1]));
 
 		if(re.match(SUBROUTINE_OR_FUNCTION_REGEX, lines[index])):
-			blocks.append(block_constructors[block_type](block_start, lines[block_start: index+1]));
+			blocks.append(block_constructors[block_type](block_start, lines[block_start: index]));
 			block_start = index;
 			block_type = Block.SUBROUTINE if re.match(SUBROUTINE_REGEX, lines[index]) else Block.FUNCTION;
 
 	for block in blocks: block.assign_calls_blocks(blocks);
 	return blocks;
+
+
+def find_block(blocks, name):
+	for block in blocks:
+		if(block.name == name):
+			block.print_signature();
+			print("|- Lines starting at LN{}:".format(block.line_number))
+			print("".join(block.lines))
 
 
 
@@ -315,7 +323,8 @@ def main():
 	lines = get_file_contents(FILENAME);
 	blocks = parse_code_blocks(lines);
 
-	print_block_calls(blocks, True);
+	# print_block_calls(blocks, True);
+	find_block(blocks, "mjdciv")
 	# for block in blocks: print(block.name, [call.name for call in block.calls])
 	# print_block_names(blocks);
 	# print_block_signatures(blocks);

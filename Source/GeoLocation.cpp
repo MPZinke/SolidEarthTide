@@ -41,7 +41,7 @@ GeoLocation::GeoLocation(double latitude, double longitude, double altitude, Dat
 	//      en=a/w
 	double sin_latitude = sin(_latitude * RADIAN);
 	double cos_latitude = cos(_latitude * RADIAN);
-	double _prime_vertical_radius = EQUITORIAL_RADIUS / EC pow((double)1.0 - E_SQR * sin_latitude * sin_latitude, 0.5);
+	double _prime_vertical_radius = EQUITORIAL_RADIUS / pow((double)1.0 - E_SQR * sin_latitude * sin_latitude, 0.5);
 
 	// LN982-984
 	//      x=(en+eht)*cla*dcos(glo)

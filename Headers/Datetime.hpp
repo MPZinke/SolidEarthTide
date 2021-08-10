@@ -66,7 +66,8 @@ class Datetime : public Date
 		int _minute;
 		double _second;
 
-		double _fractional_modified_julian;
+		double _mod_julian;  // Modified Julian Date
+		double _fract_mod_julian;  // Fractional Modified Julian Date
 		bool _leap_second_flag = false;
 
 		int* _time = NULL;
