@@ -54,6 +54,10 @@ class Datetime : public Date
 		void add_time(double);
 
 		// conversion
+		void CivilTime_to_ModifiedJulianDate();
+		void ModifiedJulianDate_to_CivilTime();
+		void set_initial_JulianDate();
+
 		double fractional_modified_julian_date();
 		void modified_julian_date_to_civil_time();
 		double modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
@@ -66,8 +70,9 @@ class Datetime : public Date
 		int _minute;
 		double _second;
 
+		double _initial_mod_julian;  // initial Modified Julian Date
 		double _mod_julian;  // Modified Julian Date
-		double _fract_mod_julian;  // Fractional Modified Julian Date
+		double _fractional_mod_julian;  // Fractional Modified Julian Date
 		bool _leap_second_flag = false;
 
 		int* _time = NULL;

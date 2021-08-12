@@ -72,9 +72,9 @@ void Datetime::CivilTime_to_ModifiedJulianDate()
 	//      fmjd=(3600*ihr+60*imn+sec)/86400.d0
 	int years_to_days = APPR_DAY_IN_YEAR * ((double)_year - (_month <= 2 ? 1.0 : 0.0));
 	int months_to_days = JULIAN_DAYS_IN_MONTH * (1.0 + (double)_month + (_month <= 2 ? 12.0 : 0.0));
-	_mod_julian = years_to_days + months_to_days + _days - ERA_DAYS_TO_1901;
+	_mod_julian = years_to_days + months_to_days + _day - ERA_DAYS_TO_1901;
 
-	_fract_mod_julian = ((double)(3600*_hours + 60*_minutes + _seconds)) / 86400.0;
+	_fractional_mod_julian = ((double)(3600*_hour + 60*_minute + _second)) / 86400.0;
 }
 
 
@@ -92,6 +92,7 @@ void Datetime::ModifiedJulianDate_to_CivilTime()
 {
 	// julian_date is mislabeled as rjd (reduced JD) in LN1193 
 	// this is confirmed by: https://gssc.esa.int/navipedia/index.php/Julian_Date
+
 	// LN1193-1198
 	//       rjd=mjd+fmjd+2400000.5d0
 	//       ia=(rjd+0.5d0)
@@ -99,9 +100,9 @@ void Datetime::ModifiedJulianDate_to_CivilTime()
 	//       ic=(ib-122.1d0)/365.25d0
 	//       id=365.25d0*ic
 	//       ie=(ib-id)/30.6001d0
-	double julian_date = _modified_julian + _fract_mod_julian + MODIFIED_JULIAN_TO_JULIAN;
+	double julian_date = _mod_julian + _fractional_mod_julian + MODIFIED_JULIAN_TO_JULIAN;
 	int inv_transform_B = (int)(julian_date + 0.5) + 1537;
-	int inv_transform_C = (PROM inv_transform_B - 122.1) / APPR_DAY_IN_YEAR
+	int inv_transform_C = (inv_transform_B - 122.1) / APPR_DAY_IN_YEAR;
 	int inv_transform_D = APPR_DAY_IN_YEAR * inv_transform_C;
 	int inv_transform_E = (inv_transform_B - inv_transform_D) / JULIAN_DAYS_IN_MONTH;
 
@@ -115,8 +116,17 @@ void Datetime::ModifiedJulianDate_to_CivilTime()
 	//       imo=ie-1-12*it2
 	//       it3=(7+imo)/10.d0
 	//       iyr=ic-4715-it3
-	_day = inv_transform_B - inv_transform_D - (int)((double)inv_transform_E*JULIAN_DAYS_IN_MONTH) + _fract_mod_julian;
-	_month = inv_transform_E  - 1 - 12 * (int)(inv_transform_E / 14.0)
+
+	// EQUIVALENTLY
+	//       it1=ie*30.6001d0	≈ int=(double)int*double
+	//       idy=ib-id-it1+fmjd	≈ int=(double)(int-int-int)+double
+	//       it2=ie/14.d0		≈ int=(double)int/double
+	//       imo=ie-1-12*it2	≈ int=(double)(int-int-int)*double
+	//       it3=(7+imo)/10.d0	≈ int=(double)(int+int)/double
+	//       iyr=ic-4715-it3	≈ int=int-int-int
+	_day = inv_transform_B - inv_transform_D - (int)(inv_transform_E*JULIAN_DAYS_IN_MONTH) + _fractional_mod_julian;
+	_month = inv_transform_E  - 1 - 12 * (int)(inv_transform_E / 14.0);
+	_year = inv_transform_C - 4715 - (int)((7 + _month) / 10.0);
 
 	// LN1210-1214
 	//       tmp=fmjd*24.d0
@@ -124,6 +134,50 @@ void Datetime::ModifiedJulianDate_to_CivilTime()
 	//       tmp=(tmp-ihr)*60.d0
 	//       imn=tmp
 	//       sec=(tmp-imn)*60.d0
+
+	// EQUIVALENTLY
+	//       tmp=fmjd*24.d0			≈ double=double*double
+	//       ihr=tmp				≈ int=(int)double
+	//       tmp=(tmp-ihr)*60.d0	≈ double=(double-(double)int)*double
+	//       imn=tmp				≈ int=(int)double
+	//       sec=(tmp-imn)*60.d0	≈ double=(double-(double)int)*double
+	double converted_fractional_mod_julian = _fractional_mod_julian * 24.0;
+	_hour = converted_fractional_mod_julian;  // casts to int
+	converted_fractional_mod_julian = (converted_fractional_mod_julian - _hour) * 60.0;
+	_minute = converted_fractional_mod_julian;
+	_second = (converted_fractional_mod_julian - _minute) * 60.0;
+}
+
+
+//       subroutine setjd0(iyr,imo,idy)
+// 
+// *** set the integer part of a modified julian date as epoch, mjd0
+// *** the modified julian day is derived from civil time as in civmjd()
+// *** allows single number expression of time in seconds w.r.t. mjd0
+void Datetime::set_initial_JulianDate()
+{
+	// LN1053
+	//      common/mjdoff/mjd0
+
+	// LN1057–1071
+	//       if(imo.le.2) then
+	//         y=iyr-1
+	//         m=imo+12
+	//       else
+	//         y=iyr
+	//         m=imo
+	//       endif
+	// 
+	//       it1=365.25d0*y
+	//       it2=30.6001d0*(m+1)
+	//       mjd=it1+it2+idy-679019
+	// 
+	// *** now set the epoch for future time computations
+	// 
+	//       mjd0=mjd
+	int int_years = APPR_DAY_IN_YEAR * (_year - (_month <= 2 ? 1 : 0));
+	int int_month = JULIAN_DAYS_IN_MONTH * (_month + (_month <= 2 ? 12 : 0) + 1);
+	_initial_mod_julian = int_years + int_month + _day - ERA_DAYS_TO_1901;
 }
 
 
@@ -275,13 +329,13 @@ double Datetime::fractional_modified_julian_date()
 	int seconds_of_day = SECONDS_IN_HOUR * _hour + SECONDS_IN_MINUTE * _minute + _second;
 	double fractional_modified_julian = (double)seconds_of_day / SECONDS_IN_DAY;
 
-	_fract_mod_julian = fractional_modified_julian;
+	_fractional_mod_julian = fractional_modified_julian;
 	return fractional_modified_julian;
 }
 
 
 // solid.f: LN1182: subroutine mjdciv(mjd,fmjd,iyr,imo,idy,ihr,imn,sec)
-// ARGS:	mjd = _modified_julian, fmjd = _fract_mod_julian, iyr = _year, imo = _month, idy = _day,
+// ARGS:	mjd = _modified_julian, fmjd = _fractional_mod_julian, iyr = _year, imo = _month, idy = _day,
 //			ihr = _hour, imn = _minute, sec = _second 
 // *** convert modified julian date to civil date
 // *** imo in range 1-12, idy in range 1-31
@@ -292,7 +346,7 @@ void Datetime::modified_julian_date_to_civil_time()
 {
 	// julian_date is mislabeled as rjd (reduced JD) in LN1193 
 	// this is confirmed by: https://gssc.esa.int/navipedia/index.php/Julian_Date
-	double julian_date = _modified_julian + _fract_mod_julian + MODIFIED_JULIAN_TO_JULIAN;
+	double julian_date = _modified_julian + _fractional_mod_julian + MODIFIED_JULIAN_TO_JULIAN;
 	int inverse_transform_part_B = (int)(julian_date + 0.5) + 1537;
 	int inverse_transform_part_C = (inverse_transform_part_B - 122.1) / DAYS_IN_YEAR;
 	int inverse_transform_part_D = inverse_transform_part_C * DAYS_IN_YEAR;
@@ -302,12 +356,12 @@ void Datetime::modified_julian_date_to_civil_time()
 	// *** therefore, fractional part of julian day + 0.5 is fractional mjd
 	_day =	inverse_transform_part_B - inverse_transform_part_D
 				- (int)(inverse_transform_part_E * JULIAN_DAYS_IN_MONTH)
-				+ _fract_mod_julian;
+				+ _fractional_mod_julian;
 	_month = inverse_transform_part_E - 1 - 12 * (int)(inverse_transform_part_E / 14);  // prop already int div.
 	_year = inverse_transform_part_C - 4715 - (int)((7 + _month) / 10);
 
 	// set time members
-	double fractional_modified_julian_hours = _fract_mod_julian * 24.0;
+	double fractional_modified_julian_hours = _fractional_mod_julian * 24.0;
 	_hour = (int)fractional_modified_julian_hours;
 	fractional_modified_julian_hours = (fractional_modified_julian_hours - _hour) * 60.0;
 	_minute = fractional_modified_julian_hours;
@@ -319,7 +373,7 @@ void Datetime::modified_julian_date_to_civil_time()
 double Datetime::modified_julian_date_to_Terrestrial_Time_julian_date_centuries()
 {
 	// LN909: !*** UTC time (sec of day)
-	double seconds_UTC = _fract_mod_julian * SECONDS_IN_DAY;
+	double seconds_UTC = _fractional_mod_julian * SECONDS_IN_DAY;
 	// LN910: !*** TT  time (sec of day)
 	double terrestrial_time_of_day = UTC_seconds_to_Terrestrial_Time(seconds_UTC); 
 	double FMJD_TT = terrestrial_time_of_day / SECONDS_IN_DAY;  // LN911: !*** TT  time (fract. day)
@@ -425,10 +479,10 @@ double Datetime::UTC_to_International_Atomic_Time(double seconds_UTC)
 double Datetime::greenwhich_hour_angle_radians()
 {
 	// LN853: !*** UTC time (sec of day)
-	double seconds_UTC = _fract_mod_julian * SECONDS_IN_DAY;
+	double seconds_UTC = _fractional_mod_julian * SECONDS_IN_DAY;
 	// LN857: !*** days since J2000
 	double days_since_start_2000 =	_modified_julian - MODIFIED_JULIAN_START_TO_J2000 
-										+ _fract_mod_julian + JULIAN_TO_REDUCED_JULIAN;
+										+ _fractional_mod_julian + JULIAN_TO_REDUCED_JULIAN;
 
 	// LN859: *** greenwich hour angle for J2000  (12:00:00 on 1 Jan 2000)
 	// LN862: !*** corrn.   (+digits)

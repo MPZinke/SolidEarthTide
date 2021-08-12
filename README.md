@@ -1,6 +1,6 @@
 # SolidEarthFlexing
 _created by: MPZinke_ <br/>
-C++ translated version of solid.f by Dennis Milbert https://geodesyworld.github.io/SOFTS/solid.htm
+C++ translated version of [solid.f by Dennis Milbert](https://geodesyworld.github.io/SOFTS/solid.htm)
 
 ## About
 
@@ -32,6 +32,25 @@ make test
 ```
 
 ## Details
+
+
+
+---
+
+## Appendix
+
+### Type Promotion
+Type conversion is an important consideration when translating between these two languages, because some precision is intentionally lost in the Fortran program. To account for this, the rules of both languages are detailed below.
+
+#### Fortran
+Fortran (mixed mode) automatically promotes a value to a type of the operand with the higher rank. EG. `int` * `double` is equivalent to `double` * `double`.<br/>
+This is supported by [this reference](https://docs.oracle.com/cd/E19957-01/805-4939/z400073a2265/index.html).
+> Double precision operators apply to only double precision operands, and any operand of lower precision is promoted to double precision.
+
+#### C++
+C++ promotes based on 
+
+---
 
 ### `solid.f`
 
@@ -200,3 +219,5 @@ MAIN
     - Params: `ttai`
 28. `gps2tai` [Function]
     - Params: `tgps`
+
+---

@@ -33,7 +33,7 @@ GeoLocation::GeoLocation(double latitude, double longitude, Datetime datetime)
 GeoLocation::GeoLocation(double latitude, double longitude, double altitude, Datetime datetime)
 : _latitude{latitude}, _longitude{longitude}, _altitude{altitude}, _datetime{datetime}
 {
-	// LN976-980
+	// LN976–980
 	//      sla=dsin(gla)
 	//      cla=dcos(gla)
 	//      w2=1.d0-e2*sla*sla
@@ -43,7 +43,7 @@ GeoLocation::GeoLocation(double latitude, double longitude, double altitude, Dat
 	double cos_latitude = cos(_latitude * RADIAN);
 	double _prime_vertical_radius = EQUITORIAL_RADIUS / pow((double)1.0 - E_SQR * sin_latitude * sin_latitude, 0.5);
 
-	// LN982-984
+	// LN982–984
 	//      x=(en+eht)*cla*dcos(glo)
 	//      y=(en+eht)*cla*dsin(glo)
 	//      z=(en*(1.d0-e2)+eht)*sla
@@ -172,7 +172,7 @@ void GeoLocation::tide_coordinates(double copy_array[])
 void GeoLocation::calculate_geocentric_solar_coordinates()
 {
 	// *** mean elements for year 2000, sun ecliptic orbit wrt. Earth
-	// LN898-905 replaced with defined values
+	// LN898–905 replaced with defined values
 	// LN910: !*** TT  time (sec of day)
 	double centuries_TT = _datetime.modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
 
@@ -223,7 +223,7 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 // *** section 3.2, pg. 38-39  routine MiniMoon
 void GeoLocation::calculate_geocentric_lunar_coordinates()
 {
-	// LN745-749: *** julian centuries since 1.5 january 2000 (J2000)
+	// LN745–749: *** julian centuries since 1.5 january 2000 (J2000)
 	// ***   (note: also low precision use of mjd --> tjd)
 	double centuries_TT = _datetime.modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
 	
@@ -261,7 +261,7 @@ void GeoLocation::calculate_geocentric_lunar_coordinates()
 	// mean_solar_anomaly *** elp -- mean anomaly of Sun  (deg)
 	// mean_angular_distance *** f   -- mean angular distance of Moon from ascending node (deg)
 	// mean_solar_lunar_longitude *** d   -- difference between mean longitudes of Sun and Moon (deg)
-// LN767-81
+// LN767–81
 //	selond=el0                                      !*** eq 3.48, p.72
 //	* +22640.d0/3600.d0*dsin((el        )/rad)
 //	* +  769.d0/3600.d0*dsin((el+el     )/rad)
@@ -308,7 +308,7 @@ double mean_solar_anomaly, double mean_angular_distance, double mean_solar_lunar
 	// mean_angular_distance *** f   -- mean angular distance of Moon from ascending node (deg)
 	// mean_solar_lunar_longitude *** d   -- difference between mean longitudes of Sun and Moon (deg)
 	// lunar_exliptic_longitude *** selatd
-// LN7845-96: 
+// LN7845–96: 
 //	q = 412.d0/3600.d0*dsin((f+f)/rad)              !*** temporary term
 //	*   +541.d0/3600.d0*dsin((elp)/rad)
 
