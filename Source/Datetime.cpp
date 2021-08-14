@@ -28,11 +28,13 @@ Datetime::Datetime(int year, int month, int day)
 Datetime::Datetime(int year, int month, int day, int hour, int minute, double second)
 : Date{year, month, day}, _hour{hour}, _minute{minute}, _second{second}
 {
-	// LN73-74
+	// LN73-75
 	//      call civmjd(iyr,imo,idy,ihr,imn,sec,mjd,fmjd)
 	//      call mjdciv(mjd,fmjd,iyr,imo,idy,ihr,imn,sec)    !*** normalize civil time
+	//      call setjd0(iyr,imo,idy)
 	CivilTime_to_ModifiedJulianDate();
 	ModifiedJulianDate_to_CivilTime();
+	set_initial_JulianDate();
 }
 
 
@@ -181,6 +183,8 @@ void Datetime::set_initial_JulianDate()
 	_initial_mod_julian = int_years + int_month + _day - ERA_DAYS_TO_1901;
 }
 
+
+// ————————————————————————————————————————————————————— LEGACY ————————————————————————————————————————————————————— //
 
 // solid.f: LN68-75
 // *** here comes the sun  (and the moon)  (go, tide!)
