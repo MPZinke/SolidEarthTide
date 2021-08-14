@@ -149,6 +149,7 @@ void Datetime::ModifiedJulianDate_to_CivilTime()
 }
 
 
+// LN1044-1048
 //       subroutine setjd0(iyr,imo,idy)
 // 
 // *** set the integer part of a modified julian date as epoch, mjd0
