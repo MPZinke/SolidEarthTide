@@ -22,6 +22,7 @@ FILENAME = "../solid.f";
 
 # Variables
 PARAM_REGEX = r"[a-zA-Z0-9,_ \t\.]*";  # get parameters from between parentheses
+ARG_REGEX = r"[a-zA-Z0-9,_ \t\.\*\+\-/]*";  # get parameters from between parentheses
 TOKEN_REGEX = r"[a-zA-Z_][a-zA-Z0-9_]*"  # standard token (C, Fortran, ASCII python, etc)
 # VARIABLE_ASSIGNMENT_REGEX: Token with a possible array index (in this case, the author only uses i as an index).
 # Use case uses declaration context VARIABLE_DECLARATION_REGEX to determine whether it is a function or an array.
@@ -37,7 +38,7 @@ SUBROUTINE_OR_FUNCTION_REGEX = r"      (double precision function|subroutine)[ \
 
 ## Calls
 SUBROUTINE_CALL_REGEX = r"      (  )*call[ \t]+"+TOKEN_REGEX+r"[ \t]*\(";
-FUNCTION_CALL = TOKEN_REGEX+r"[ \t]*\("+PARAM_REGEX+r"\)";
+FUNCTION_CALL = TOKEN_REGEX+r"[ \t]*\("+ARG_REGEX+r"\)";
 FUNCTION_CALL_LINE_START = r"(      [ \t]*"+TOKEN_REGEX+r".*=|     \*[ \t]*[\+\-\*/]*[ \t]*"+TOKEN_REGEX+r")";
 
 
@@ -324,7 +325,7 @@ def main():
 	blocks = parse_code_blocks(lines);
 
 	# print_block_calls(blocks, True);
-	find_block(blocks, "mjdciv")
+	find_block(blocks, "MAIN")
 	# for block in blocks: print(block.name, [call.name for call in block.calls])
 	# print_block_names(blocks);
 	# print_block_signatures(blocks);
