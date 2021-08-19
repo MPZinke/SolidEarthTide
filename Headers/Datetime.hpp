@@ -53,7 +53,14 @@ class Datetime : public Date
 		void time(int, int, double);
 		void add_time(double);
 
-		// conversion
+		// CONVERSION
+		double FMJD_to_TerrestrialTime();
+		double FMJD_to_UTC();
+		double InternationalAtomicTime();
+		double InternationalAtomicTime_to_TerrestrialTime(double);
+		double JulianDate_converter();
+		double TerrestrialTime_seconds();
+		// CONVERSION::MODIFIERS
 		void CivilTime_to_ModifiedJulianDate();
 		void ModifiedJulianDate_to_CivilTime();
 		void set_initial_JulianDate();
@@ -73,6 +80,7 @@ class Datetime : public Date
 		double _initial_mod_julian;  // initial Modified Julian Date
 		double _mod_julian;  // Modified Julian Date
 		double _fractional_mod_julian;  // Fractional Modified Julian Date
+
 		bool _leap_second_flag = false;
 
 		int* _time = NULL;
