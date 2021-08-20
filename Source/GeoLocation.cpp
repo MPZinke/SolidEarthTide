@@ -153,6 +153,8 @@ void GeoLocation::tide_coordinates(double copy_array[])
 // ———————————————————————————————————————————————————— SETTERS ————————————————————————————————————————————————————— //
 
 
+// ———————————————————————————————————————————————— SUN, MOON, TIDE ————————————————————————————————————————————————— //
+
 // LN880–890
 //       subroutine sunxyz(mjd,fmjd,rs,lflag)
 // 
@@ -185,7 +187,7 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	//       em2   = em+em                               !*** radians
 	double JulianCenturies = _datetime.JulianCenturies_since_1stJanuary2000();
 	double solar_ephemerides_degrees = (357.5256 + 35999.049 * JulianCenturies);
-	double solar_ephemerides = solar_ephemerides_degrees / RADIAN;
+	double solar_ephemerides = solar_ephemerides_degrees * TO_RADIANS;
 
 	// LN923–926
 	// *** series expansions in mean anomaly, em   (eq. 3.43, p.71)
@@ -212,11 +214,9 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	//       rs1 = r*cslon              !*** meters             !*** eq. 3.46, p.71
 	//       rs2 = r*sslon*cobe         !*** meters             !*** eq. 3.46, p.71
 	//       rs3 = r*sslon*sobe         !*** meters             !*** eq. 3.46, p.71
-	
+
 }
 
-
-// ———————————————————————————————————————————————— SUN, MOON, TIDE ————————————————————————————————————————————————— //
 
 // // solid.f: LN880: subroutine sunxyz(mjd,fmjd,rs,lflag)
 // // ARGS:	mjd = _modified_julian, fmjd = _fractional_modified_julian, rs = _sun,
