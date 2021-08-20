@@ -181,6 +181,7 @@ void Datetime::set_initial_JulianDate()
 	int int_years = APPR_DAY_IN_YEAR * (_year - (_month <= 2 ? 1 : 0));
 	int int_month = JULIAN_DAYS_IN_MONTH * (_month + (_month <= 2 ? 12 : 0) + 1);
 	_initial_mod_julian = int_years + int_month + _day - ERA_DAYS_TO_1901;
+	std::cout << "\nDatetime::set_initial_JulianDate()::_initial_mod_julian: " << _initial_mod_julian << std::endl;
 }
 
 

@@ -63,12 +63,12 @@ GeoLocation create_geolocation_from_user_input()
 	//     5 write(*,'(a$)') 'Lon. (pos E.) [-360,+360]: '
 	//       read(*,*) glod
 	//       if(glod.lt.-360.d0.or.glod.gt.360.d0) go to 5
-	double latitude = get_number_from_cin("Latitude [-90, +90] °N: ", -90.0, 90.0);
-	double longitude = get_number_from_cin("Longitude [-180, +180] °E: ", -180.0, 180.0);
-
 	int year = get_number_from_cin("Year [1901-2099]: ", 1901, 2099);
 	int month = get_number_from_cin("Month [1-12]: ", 1, 12);
 	int day = get_number_from_cin("Day [1-31]: ", 1, 31);
+
+	double latitude = get_number_from_cin("Latitude [-90, +90] °N: ", -90.0, 90.0);
+	double longitude = get_number_from_cin("Longitude [-180, +180] °E: ", -180.0, 180.0);
 
 	return GeoLocation(latitude, longitude, Datetime(year, month, day));
 }

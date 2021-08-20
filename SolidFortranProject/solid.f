@@ -1069,6 +1069,8 @@
 *** now set the epoch for future time computations
 
       mjd0=mjd
+      write(*,*)
+      write(*,'(a,i5)') 'setjd0(...): mjd0: ',mjd0
 
       return
       end

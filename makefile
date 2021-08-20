@@ -6,7 +6,12 @@ SOURCE=./Source/*.cpp
 
 all:
 	$(CXX) $(FLAGS) $(HEADER) $(SOURCE) -o SolidEarthFlexing
+	gfortran SolidFortranProject/solid.f -o solid
 
 
 fortran:
-	gfortran solid.f -o solid
+	gfortran SolidFortranProject/solid.f -o solid
+
+
+diff:
+	diff <(./solid < TestSamples/solid/1.txt) <(./SolidEarthFlexing < TestSamples/SolidEarthFlexing/1.txt)

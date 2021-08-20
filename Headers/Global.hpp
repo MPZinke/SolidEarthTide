@@ -15,6 +15,9 @@
 #define _Global_
 
 
+#include <iostream>
+
+
 // TIME::CALENDAR::CONVERSION
 #define INTERNATION_ATOMIC_TIME_TO_TERRESTRIAL_TIME 32.184
 
