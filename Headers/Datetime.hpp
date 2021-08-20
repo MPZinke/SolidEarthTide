@@ -30,23 +30,27 @@ enum
 class Datetime : public Date
 {
 	public:
+		// CONSTRUCTOR
 		Datetime(int, int, int);
 		Datetime(int, int, int, int, int, double);
+		// CONSTRUCTOR::CALLED
+		void CivilTime_to_ModifiedJulianDate();
+		void ModifiedJulianDate_to_CivilTime();
+		void set_initial_JulianDate();
+		// DESTRUCTOR
 		~Datetime();
 
-		// usage
-		void standardize_civil_time_and_set_initial_julian_date();
-
-		// getters
+		// GETTERS
 		int hour();
 		int minute();
 		double second();
+		double FractionalModJulianDate();
 		int* time_array();  // returns a pointer to an array of {hour, minute, second}
 		void time_array(int[]);  // copies to an array of {hour, minute, second}
 		int* datetime_array();  // returns a pointer to an array of {year, month, day, hour, minute, second}
 		void datetime_array(int[]);  // copies to an array of {year, month, day, hour, minute, second}
 
-		// setters
+		// SETTERS
 		void hour(int);
 		void minute(int);
 		void second(int);
@@ -59,16 +63,10 @@ class Datetime : public Date
 		double InternationalAtomicTime();
 		double InternationalAtomicTime_to_TerrestrialTime(double);
 		double JulianDate_converter();
+		double JulianCenturies_since_1stJanuary2000();
 		double TerrestrialTime_seconds();
-		// CONVERSION::MODIFIERS
-		void CivilTime_to_ModifiedJulianDate();
-		void ModifiedJulianDate_to_CivilTime();
-		void set_initial_JulianDate();
 
-		double fractional_modified_julian_date();
-		void modified_julian_date_to_civil_time();
-		double modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
-		double greenwhich_hour_angle_radians();
+		double GreenwhichHour_angle_radians();
 
 		Date date();
 
@@ -84,10 +82,6 @@ class Datetime : public Date
 		bool _leap_second_flag = false;
 
 		int* _time = NULL;
-
-		// conversion
-		double UTC_seconds_to_Terrestrial_Time(double);
-		double UTC_to_International_Atomic_Time(double);
 };
 
 

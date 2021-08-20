@@ -41,7 +41,7 @@ TEMP get_number_from_cin(string message, TEMP min, TEMP max)
 // get user input for date, time
 GeoLocation create_geolocation_from_user_input()
 {
-	// LN27-48
+	// LN27–48
 	// *** query section
 	// 
 	//     1 write(*,'(a$)') 'Enter year    [1901-2099]: '
@@ -78,7 +78,6 @@ GeoLocation create_geolocation_from_user_input()
 int main(int arg_count, char* arg_variables[])
 {
 	GeoLocation geolocation = create_geolocation_from_user_input();
-	geolocation.datetime()->standardize_civil_time_and_set_initial_julian_date();
 	geolocation.calculate_geocentric_solar_coordinates();
 	geolocation.calculate_geocentric_lunar_coordinates();
 

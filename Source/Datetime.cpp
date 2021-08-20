@@ -184,6 +184,102 @@ void Datetime::set_initial_JulianDate()
 }
 
 
+// ———————————————————————————————————————————————————— GETTERS ————————————————————————————————————————————————————— //
+
+double Datetime::FractionalModJulianDate()
+{
+	return _fractional_mod_julian;
+}
+
+
+int Datetime::hour()
+{
+	return _hour;
+}
+
+
+int Datetime::minute()
+{
+	return _minute;
+}
+
+
+double Datetime::second()
+{
+	return _second;
+}
+
+
+int* Datetime::time_array()
+{
+	if(!_time) _time = new int[3];
+
+	_time[HOUR] = _hour;
+	_time[MINUTE] = _minute;
+	_time[SECOND] = _second;
+
+	return _time;
+}
+
+
+void Datetime::time_array(int copy_array[])
+{
+	copy_array[HOUR] = _hour;
+	copy_array[MINUTE] = _minute;
+	copy_array[SECOND] = _second;
+}
+
+
+// ————————————————————————————————————————————— GETTERS:: TYPE CASTERS ————————————————————————————————————————————— //
+
+Date Datetime::date()
+{
+	return Date{_year, _month, _day};
+}
+
+
+Datetime Date::datetime()
+{
+	return Datetime{_year, _month, _day};
+}
+
+
+Datetime Date::datetime(int hour, int minute, double second)
+{
+	return Datetime{_year, _month, _day, hour, minute, second};
+}
+
+
+// ———————————————————————————————————————————————————— SETTERS ————————————————————————————————————————————————————— //
+
+void Datetime::hour(int hour)
+{
+	_hour = hour;
+}
+
+
+void Datetime::minute(int minute)
+{
+	_minute = minute;
+}
+
+
+void Datetime::second(int second)
+{
+	_second = second;
+}
+
+
+void Datetime::time(int hour, int minute, double second)
+{
+	_hour = hour;
+	_minute = minute;
+	_second = second;
+}
+
+
+// ————————————————————————————————————————————————— TIME CONVERSION ———————————————————————————————————————————————— //
+
 // Gets the Terrestrial Time in seconds based on current Fractional Modified Julian Date.
 // Calls a whole lot of conversion functions. Important from LN909–911.
 double Datetime::FMJD_to_TerrestrialTime()
@@ -446,102 +542,25 @@ double Datetime::InternationalAtomicTime_to_TerrestrialTime(double international
 }
 
 
-// ———————————————————————————————————————————————————— GETTERS ————————————————————————————————————————————————————— //
-
-int Datetime::hour()
+double Datetime::JulianCenturies_since_1stJanuary2000()
 {
-	return _hour;
+	// LN914–918
+	// *** julian centuries since 1.5 january 2000 (J2000)
+	// ***   (note: also low precision use of mjd --> tjd)
+	// 
+	//       tjdtt = mjd+fmjdtt+2400000.5d0              !*** Julian Date, TT
+	//       t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
+	double JulianDate = _mod_julian + FMJD_to_TerrestrialTime() + MODIFIED_JULIAN_TO_JULIAN;
+	return (JulianDate - GREGORIAN_DAYS_TO_JULIAN_DAYS) / JULIAN_DAYS_TO_CENTURIES;
 }
 
-
-int Datetime::minute()
-{
-	return _minute;
-}
-
-
-double Datetime::second()
-{
-	return _second;
-}
-
-
-int* Datetime::time_array()
-{
-	if(!_time) _time = new int[3];
-
-	_time[HOUR] = _hour;
-	_time[MINUTE] = _minute;
-	_time[SECOND] = _second;
-
-	return _time;
-}
-
-
-void Datetime::time_array(int copy_array[])
-{
-	copy_array[HOUR] = _hour;
-	copy_array[MINUTE] = _minute;
-	copy_array[SECOND] = _second;
-}
-
-
-// ————————————————————————————————————————————— GETTERS:: TYPE CASTERS ————————————————————————————————————————————— //
-
-Date Datetime::date()
-{
-	return Date{_year, _month, _day};
-}
-
-
-Datetime Date::datetime()
-{
-	return Datetime{_year, _month, _day};
-}
-
-
-Datetime Date::datetime(int hour, int minute, double second)
-{
-	return Datetime{_year, _month, _day, hour, minute, second};
-}
-
-
-// ———————————————————————————————————————————————————— SETTERS ————————————————————————————————————————————————————— //
-
-void Datetime::hour(int hour)
-{
-	_hour = hour;
-}
-
-
-void Datetime::minute(int minute)
-{
-	_minute = minute;
-}
-
-
-void Datetime::second(int second)
-{
-	_second = second;
-}
-
-
-void Datetime::time(int hour, int minute, double second)
-{
-	_hour = hour;
-	_minute = minute;
-	_second = second;
-}
-
-
-// ————————————————————————————————————————————————— TIME CONVERSION ———————————————————————————————————————————————— //
 
 // solid.f: LN840: subroutine getghar(mjd,fmjd,ghar)
 // ARGS: mjd = modified_julian, fmjd = fractional_modified_julian, ghar = greenwhich_hour_angle
 // *** convert mjd/fmjd in UTC time to Greenwich hour angle (in radians)
 // *** "satellite orbits: models, methods, applications" montenbruck & gill(2000)
 // *** section 2.3.1, pg. 33
-double Datetime::greenwhich_hour_angle_radians()
+double Datetime::GreenwhichHour_angle_radians()
 {
 	// LN853: !*** UTC time (sec of day)
 	double seconds_UTC = _fractional_mod_julian * SECONDS_IN_DAY;
