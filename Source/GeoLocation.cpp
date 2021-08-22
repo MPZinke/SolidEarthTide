@@ -186,8 +186,12 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	//       em    = emdeg/rad                           !*** radians
 	//       em2   = em+em                               !*** radians
 	double JulianCenturies = _datetime.JulianCenturies_since_1stJanuary2000();
+	std::cout	<< "GeoLocation::calculate_geocentric_solar_coordinates::JulianCenturies: " << JulianCenturies
+				<< std::endl;
 	double solar_ephemerides_degrees = (357.5256 + 35999.049 * JulianCenturies);
 	double solar_ephemerides = solar_ephemerides_degrees * TO_RADIANS;
+	std::cout	<< "GeoLocation::calculate_geocentric_solar_coordinates::solar_ephemerides: " << solar_ephemerides
+				<< std::endl;
 
 	// LN923–926
 	// *** series expansions in mean anomaly, em   (eq. 3.43, p.71)
@@ -197,6 +201,9 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	double radius = (149.619 - 2.499 * cos(solar_ephemerides) - 0.021 * cos(solar_ephemerides * 2)) * 1.0e9;
 	double solar_longitude_part = (6892.0 * sin(solar_ephemerides) + 72.0 * sin(solar_ephemerides * 2)) / 3600.0;
 	double solar_longitude = OPOD + solar_ephemerides_degrees + solar_longitude_part;
+
+	std::cout	<< "GeoLocation::calculate_geocentric_solar_coordinates::solar_longitude: " << solar_longitude
+				<< std::endl;
 
 	// LN928–930
 	// *** precession of equinox wrt. J2000   (p.71)

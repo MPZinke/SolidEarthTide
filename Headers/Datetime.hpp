@@ -44,6 +44,7 @@ class Datetime : public Date
 		int hour();
 		int minute();
 		double second();
+		int ModJulianDate();
 		double FractionalModJulianDate();
 		int* time_array();  // returns a pointer to an array of {hour, minute, second}
 		void time_array(int[]);  // copies to an array of {hour, minute, second}

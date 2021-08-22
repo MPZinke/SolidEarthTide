@@ -77,6 +77,8 @@
       tdel2=1.d0/60.d0/24.d0                           !*** 1 minute steps
       do iloop=0,60*24
         lflag=.false.                           !*** false means flag not raised
+        write(*,*)
+        write(*,'(a,i5,f15.9)') 'LOOP: mjd, fmjd: ',mjd,fmjd
         call sunxyz (mjd,fmjd,rsun,lflag)                   !*** mjd/fmjd in UTC
         call moonxyz(mjd,fmjd,rmoon,lflag)                  !*** mjd/fmjd in UTC
         call detide (xsta,mjd,fmjd,rsun,rmoon,etide,lflag)  !*** mjd/fmjd in UTC
@@ -916,14 +918,17 @@
 
       tjdtt = mjd+fmjdtt+2400000.5d0              !*** Julian Date, TT
       t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
+      write(*,'(a,f15.9)') 'sunxyz:t',t
       emdeg = 357.5256d0 + 35999.049d0*t          !*** degrees
       em    = emdeg/rad                           !*** radians
       em2   = em+em                               !*** radians
+      write(*,'(a,f15.9)') 'sunxyz::em: ',em
 
 *** series expansions in mean anomaly, em   (eq. 3.43, p.71)
 
       r=(149.619d0-2.499d0*dcos(em)-0.021d0*dcos(em2))*1.d9      !*** m.
       slond=opod + emdeg + (6892.d0*dsin(em)+72.d0*dsin(em2))/3600.d0
+      write(*,'(a,f15.9)') 'sunxyz::slond: ',slond
 
 *** precession of equinox wrt. J2000   (p.71)
 
@@ -1069,8 +1074,6 @@
 *** now set the epoch for future time computations
 
       mjd0=mjd
-      write(*,*)
-      write(*,'(a,i5)') 'setjd0(...): mjd0: ',mjd0
 
       return
       end

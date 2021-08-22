@@ -231,6 +231,12 @@ void Datetime::time_array(int copy_array[])
 }
 
 
+int Datetime::ModJulianDate()
+{
+	return _mod_julian;
+}
+
+
 // ————————————————————————————————————————————— GETTERS:: TYPE CASTERS ————————————————————————————————————————————— //
 
 Date Datetime::date()
