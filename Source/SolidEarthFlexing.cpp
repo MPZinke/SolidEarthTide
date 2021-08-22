@@ -78,16 +78,16 @@ GeoLocation create_geolocation_from_user_input()
 int main(int arg_count, char* arg_variables[])
 {
 	GeoLocation geolocation = create_geolocation_from_user_input();
-	geolocation.calculate_geocentric_solar_coordinates();
-	geolocation.calculate_geocentric_lunar_coordinates();
-
-	double sun[3];
-	geolocation.sun_coordinates(sun);
-	double moon[3];
-	geolocation.moon_coordinates(moon);
 
 	// for(int x = 0; x < MAX_STEPS; x += STEP_SIZE)
 	// {
+		geolocation.calculate_geocentric_solar_coordinates();
+		geolocation.calculate_geocentric_lunar_coordinates();
+
+		double sun[3];
+		geolocation.sun_coordinates(sun);
+		double moon[3];
+		geolocation.moon_coordinates(moon);
 
 	// }
 	
