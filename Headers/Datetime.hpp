@@ -61,13 +61,12 @@ class Datetime : public Date
 		// CONVERSION
 		double FMJD_to_TerrestrialTime();
 		double FMJD_to_UTC();
+		double GreenwichHourAngle_radians();
 		double InternationalAtomicTime();
 		double InternationalAtomicTime_to_TerrestrialTime(double);
 		double JulianDate_converter();
 		double JulianCenturies_since_1stJanuary2000();
 		double TerrestrialTime_seconds();
-
-		double GreenwhichHour_angle_radians();
 
 		Date date();
 

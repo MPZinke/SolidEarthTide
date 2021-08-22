@@ -561,32 +561,53 @@ double Datetime::JulianCenturies_since_1stJanuary2000()
 }
 
 
-// solid.f: LN840: subroutine getghar(mjd,fmjd,ghar)
-// ARGS: mjd = modified_julian, fmjd = fractional_modified_julian, ghar = greenwhich_hour_angle
-// *** convert mjd/fmjd in UTC time to Greenwich hour angle (in radians)
-// *** "satellite orbits: models, methods, applications" montenbruck & gill(2000)
-// *** section 2.3.1, pg. 33
-double Datetime::GreenwhichHour_angle_radians()
+// Convert FMJD to measurement in degrees westward from the prime meridian.
+// LN840–845
+//      subroutine getghar(mjd,fmjd,ghar)
+//
+//*** convert mjd/fmjd in UTC time to Greenwich hour angle (in radians)
+//
+//*** "satellite orbits: models, methods, applications" montenbruck & gill(2000)
+//*** section 2.3.1, pg. 33
+double Datetime::GreenwichHourAngle_radians()
 {
-	// LN853: !*** UTC time (sec of day)
-	double seconds_UTC = _fractional_mod_julian * SECONDS_IN_DAY;
-	// LN857: !*** days since J2000
-	double days_since_start_2000 =	_modified_julian - MODIFIED_JULIAN_START_TO_J2000 
-										+ _fractional_mod_julian + JULIAN_TO_REDUCED_JULIAN;
+	// LN850–854
+	// *** need UTC to get sidereal time ("astronomy on the personal computer", 4th ed)
+	// ***                               (pg.43, montenbruck & pfleger, springer, 2005)
+	// 
+	//       tsecutc=fmjd*86400.d0                        !*** UTC time (sec of day)
+	//       fmjdutc=tsecutc/86400.d0                     !*** UTC time (fract. day)
+	double fractional_mod_julian_UTC = FMJD_to_UTC() / SECONDS_IN_DAY;
 
-	// LN859: *** greenwich hour angle for J2000  (12:00:00 on 1 Jan 2000)
-	// LN862: !*** corrn.   (+digits)
-	double greenwhich_hour_angle = days_since_start_2000 * 360.9856473662862 + 280.46061837504;
+	// LN856–857
+	// ***** d = MJD - 51544.5d0                               !*** footnote
+	//       d =(mjd-51544) + (fmjdutc-0.5d0)                  !*** days since J2000
+	// Cast to int & double to show implicit Fortran conversion (so I (or anyone) don't forget).
+	double days_since_J2000 = (int)(_mod_julian - 51544) + (double)(fractional_mod_julian_UTC - 0.5);
 
-	// LN864: **** normalize to 0-360 and convert to radians
-	int int_greenwhich_hour_angle = greenwhich_hour_angle / 360.0;  // LN866
-	// LN867
-	greenwhich_hour_angle = (greenwhich_hour_angle - int_greenwhich_hour_angle * 360) / RADIAN;
-	while(PI_TIMES_TWO <  greenwhich_hour_angle)
-		greenwhich_hour_angle -= PI_TIMES_TWO;
+	// LN859–862
+	// *** greenwich hour angle for J2000  (12:00:00 on 1 Jan 2000)
+	// 
+	// ***** ghad = 100.46061837504d0 + 360.9856473662862d0*d  !*** eq. 2.85 (+digits)
+	//       ghad = 280.46061837504d0 + 360.9856473662862d0*d  !*** corrn.   (+digits)
+	double greenwich_hour_angle = 360.9856473662862 * days_since_J2000 + 280.46061837504;
 
-	while(greenwhich_hour_angle < 0)
-		greenwhich_hour_angle += PI_TIMES_TWO;
+	// LN864–875
+	// **** normalize to 0-360 and convert to radians
+	// 
+	//       i    = ghad/360.d0
+	//       ghar =(ghad-i*360.d0)/rad
+	//     1 if(ghar.gt.pi2) then
+	//         ghar=ghar-pi2
+	//         go to 1
+	//       endif
+	//     2 if(ghar.lt.0.d0) then
+	//         ghar=ghar+pi2
+	//         go to 2
+	//       endif
+	greenwich_hour_angle = (greenwich_hour_angle - (int)(greenwich_hour_angle / 360.0) * 360.0) / RADIAN;
+	while(360.0 <= greenwich_hour_angle) greenwich_hour_angle -= PI_TIMES_TWO;
+	while(greenwich_hour_angle <= 0.0) greenwich_hour_angle += PI_TIMES_TWO;
 
-	return greenwhich_hour_angle;
+	return greenwich_hour_angle;
 }

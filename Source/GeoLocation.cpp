@@ -56,9 +56,9 @@ GeoLocation::GeoLocation(double latitude, double longitude, double altitude, Dat
 GeoLocation::~GeoLocation()
 {
 	if(_ECEF_coordinates) delete[] _ECEF_coordinates;
-	if(_sun_coordinates) delete[] _sun_coordinates;
-	if(_moon_coordinates) delete[] _moon_coordinates;
-	if(_tide_coordinates) delete[] _tide_coordinates;
+	if(_solar_coordinates_dynamic) delete[] _solar_coordinates_dynamic;
+	if(_lunar_coordinates_dynamic) delete[] _lunar_coordinates_dynamic;
+	if(_tide_coordinates_dynamic) delete[] _tide_coordinates_dynamic;
 }
 
 
@@ -90,63 +90,63 @@ void GeoLocation::ECEF_coordinates(double copy_array[])
 }
 
 
-double* GeoLocation::sun_coordinates()
+double* GeoLocation::solar_coordinates()
 {
-	if(!_sun_coordinates) _sun_coordinates = new double[3];
+	if(!_solar_coordinates_dynamic) _solar_coordinates_dynamic = new double[3];
 
-	_sun_coordinates[X] = _sun[X];
-	_sun_coordinates[Y] = _sun[Y];
-	_sun_coordinates[Z] = _sun[Z];
+	_solar_coordinates_dynamic[X] = _solar_coordinates[X];
+	_solar_coordinates_dynamic[Y] = _solar_coordinates[Y];
+	_solar_coordinates_dynamic[Z] = _solar_coordinates[Z];
 
-	return _sun_coordinates;
+	return _solar_coordinates_dynamic;
 }
 
 
-void GeoLocation::sun_coordinates(double copy_array[])
+void GeoLocation::solar_coordinates(double copy_array[])
 {
-	copy_array[X] = _sun[X];
-	copy_array[Y] = _sun[Y];
-	copy_array[Z] = _sun[Z];
+	copy_array[X] = _solar_coordinates[X];
+	copy_array[Y] = _solar_coordinates[Y];
+	copy_array[Z] = _solar_coordinates[Z];
 }
 
 
-double* GeoLocation::moon_coordinates()
+double* GeoLocation::lunar_coordinates()
 {
-	if(!_moon_coordinates) _moon_coordinates = new double[3];
+	if(!_lunar_coordinates_dynamic) _lunar_coordinates_dynamic = new double[3];
 
-	_moon_coordinates[X] = _moon[X];
-	_moon_coordinates[Y] = _moon[Y];
-	_moon_coordinates[Z] = _moon[Z];
+	_lunar_coordinates_dynamic[X] = _lunar_coordinates[X];
+	_lunar_coordinates_dynamic[Y] = _lunar_coordinates[Y];
+	_lunar_coordinates_dynamic[Z] = _lunar_coordinates[Z];
 
-	return _moon_coordinates;
+	return _lunar_coordinates_dynamic;
 }
 
 
-void GeoLocation::moon_coordinates(double copy_array[])
+void GeoLocation::lunar_coordinates(double copy_array[])
 {
-	copy_array[X] = _moon[X];
-	copy_array[Y] = _moon[Y];
-	copy_array[Z] = _moon[Z];
+	copy_array[X] = _lunar_coordinates[X];
+	copy_array[Y] = _lunar_coordinates[Y];
+	copy_array[Z] = _lunar_coordinates[Z];
 }
 
 
 double* GeoLocation::tide_coordinates()
 {
-	if(!_tide_coordinates) _tide_coordinates = new double[3];
+	if(!_tide_coordinates_dynamic) _tide_coordinates_dynamic = new double[3];
 
-	_tide_coordinates[X] = _tide[X];
-	_tide_coordinates[Y] = _tide[Y];
-	_tide_coordinates[Z] = _tide[Z];
+	_tide_coordinates_dynamic[X] = _tide_coordinates[X];
+	_tide_coordinates_dynamic[Y] = _tide_coordinates[Y];
+	_tide_coordinates_dynamic[Z] = _tide_coordinates[Z];
 
-	return _tide_coordinates;
+	return _tide_coordinates_dynamic;
 }
 
 
 void GeoLocation::tide_coordinates(double copy_array[])
 {
-	copy_array[X] = _tide[X];
-	copy_array[Y] = _tide[Y];
-	copy_array[Z] = _tide[Z];
+	copy_array[X] = _tide_coordinates[X];
+	copy_array[Y] = _tide_coordinates[Y];
+	copy_array[Z] = _tide_coordinates[Z];
 }
 
 
@@ -202,72 +202,33 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	// *** precession of equinox wrt. J2000   (p.71)
 	// 
 	//       slond=slond + 1.3972d0*t                              !*** degrees
-	solar_longitude += 1.3972 * JulianCenturies;
+	double solar_longitude_degrees = solar_longitude + 1.3972 * JulianCenturies;
 
+	// LN932–937
 	// *** position vector of sun (mean equinox & ecliptic of J2000) (EME2000, ICRF)
 	// ***                        (plus long. advance due to precession -- eq. above)
 	// 
 	//       slon =slond/rad                                       !*** radians
 	//       sslon=dsin(slon)
 	//       cslon=dcos(slon)
-	// 
+	double sin_solar_longitude = sin(solar_longitude_degrees * TO_RADIANS);
+	double cos_solar_longitude = cos(solar_longitude_degrees * TO_RADIANS);
+
+	// LN939–941
 	//       rs1 = r*cslon              !*** meters             !*** eq. 3.46, p.71
 	//       rs2 = r*sslon*cobe         !*** meters             !*** eq. 3.46, p.71
 	//       rs3 = r*sslon*sobe         !*** meters             !*** eq. 3.46, p.71
+	_solar_coordinates[0] = radius * cos_solar_longitude;
+	_solar_coordinates[1] = radius * sin_solar_longitude * COS_OBLIQUITY;
+	_solar_coordinates[2] = radius * sin_solar_longitude * SIN_OBLIQUITY;
 
+	// LN943–946
+	// *** convert position vector of sun to ECEF  (ignore polar motion/LOD)
+	// 
+	//       call getghar(mjd,fmjd,ghar)                        !*** sec 2.3.1,p.33
+	//       call rot3(ghar,rs1,rs2,rs3,rs(1),rs(2),rs(3))      !*** eq. 2.89, p.37
+	rotate_coordinates_about_GreenwichHourAngle_radians(_solar_coordinates);
 }
-
-
-// // solid.f: LN880: subroutine sunxyz(mjd,fmjd,rs,lflag)
-// // ARGS:	mjd = _modified_julian, fmjd = _fractional_modified_julian, rs = _sun,
-// //			lflag = _datetime._leap_second_flag
-// // *** get low-precision, geocentric coordinates for sun (ECEF)
-// //
-// // *** input, mjd/fmjd, is Modified Julian Date (and fractional) in UTC time
-// // *** output, rs, is geocentric solar position vector [m] in ECEF
-// // ***	flag  -- leap second table limit flag,  false:flag not raised
-// // *** 1."satellite orbits: models, methods, applications" montenbruck & gill(2000)
-// // *** section 3.3.2, pg. 70-71
-// // *** 2."astronomy on the personal computer, 4th ed." montenbruck & pfleger (2005)
-// // *** section 3.2, pg. 39  routine MiniSun
-// void GeoLocation::calculate_geocentric_solar_coordinates()
-// {
-// 	// *** mean elements for year 2000, sun ecliptic orbit wrt. Earth
-// 	// LN898–905 replaced with defined values
-// 	// LN910: !*** TT  time (sec of day)
-// 	double centuries_TT = _datetime.modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
-
-// 	// *** julian centuries since 1.5 january 2000 (J2000)
-// 	// ***   (note: also low precision use of mjd --> tjd)
-// 	double em_degrees = centuries_TT * 35999.049 + 357.5256;  // LN919: !*** degrees
-// 	double em = em_degrees / RADIAN;  // LN919: !*** radians
-
-// 	// LN923: *** series expansions in mean anomaly, em   (eq. 3.43, p.71)
-// 	double radius = (149.619 - 2.499 * cos(em) - .021 * cos(2*em)) * 1000000000;  // meters
-// 	double solar_longitude_degrees = OPOD + em_degrees + (6892 * sin(em) + 72 * sin(2*em)) / SECONDS_IN_HOUR;
-
-// 	// LN928: *** precession of equinox wrt. J2000   (p.71)
-// 	solar_longitude_degrees += 1.3972 * centuries_TT;
-
-// 	// LN932: *** position vector of sun (mean equinox & ecliptic of J2000) (EME2000, ICRF)
-// 	// ***	lus long. advance due to precession -- eq. above)
-// 	double solar_longitude = solar_longitude_degrees / RADIAN;
-// 	double sin_solar_longitude = sin(solar_longitude);
-// 	double cos_solar_longitude = cos(solar_longitude);
-
-// 	double solar_radius[3];
-// 	solar_radius[X] = radius * cos_solar_longitude;  // LN939: !*** meters	*** eq. 3.46, p.71
-// 	// LN940: !*** meters	*** eq. 3.46, p.71
-// 	solar_radius[Y] = radius * sin_solar_longitude * COS_OBLIQUITY;
-// 	// LN941: !*** meters	*** eq. 3.46, p.71
-// 	solar_radius[Z] = radius * sin_solar_longitude * SIN_OBLIQUITY;
-
-// 	// LN943: *** convert position vector of sun to ECEF  (ignore polar motion/LOD)
-// 	double greenwhich_hour_angle = _datetime.GreenwhichHour_angle_radians();  // LN945 !*** sec 2.3.1,p.33
-
-// 	// LN946: !*** eq. 2.89, p.37
-// 	rotate_around_3_axis(solar_radius, _sun, greenwhich_hour_angle);
-// }
 
 
 // solid.f: LN719: subroutine moonxyz(mjd,fmjd,rm,lflag)
@@ -448,17 +409,34 @@ double lunar_ecliptic_longitude)
 
 // ——————————————————————————————————————————————————— TRANSFORMS ——————————————————————————————————————————————————— //
 
-// solid.f: LN1025: subroutine rot3(theta,x,y,z,u,v,w)
-// ARGS:	theta = theta, x = initial[X], y = initial[Y], z = initial[Z], u = transformed[X], v = transformed[Y],
-//			w = transformed[Z]
-// *** rotate coordinate axes about 3 axis by angle of theta radians
-// *** x,y,z transformed into u,v,w
-void GeoLocation::rotate_around_3_axis(double initial[], double transformed[], double theta)
+// LN832–835 & LN943–946
+// *** convert position vector of moon to ECEF  (ignore polar motion/LOD)
+// 
+//       call getghar(mjd,fmjd,ghar)                        !*** sec 2.3.1,p.33
+//       call rot3(ghar,rm1,rm2,rm3,rm(1),rm(2),rm(3))      !*** eq. 2.89, p.37
+void GeoLocation::rotate_coordinates_about_GreenwichHourAngle_radians(double coordinates[3])
 {
-	double sin_theta = sin(theta);
-	double cos_theta = cos(theta);
+	// LN835 & LN945
+	double greenwich_hour_angle = _datetime.GreenwichHourAngle_radians();
 
-	transformed[X] = initial[X] * cos_theta + initial[Y] * sin_theta;
-	transformed[Y] = initial[Y] * cos_theta - initial[X] * sin_theta;
-	transformed[Z] = initial[Z];
+	// LN1025–1028
+	//       subroutine rot3(theta,x,y,z,u,v,w)
+	//       
+	// *** rotate coordinate axes about 3 axis by angle of theta radians
+	// *** x,y,z transformed into u,v,w
+	double coordinates_x = coordinates[X];
+	double coordinates_y = coordinates[Y];
+
+	// LN1032–1033
+	//       s=dsin(theta)
+	//       c=dcos(theta)
+	double sin_greenwich_hour_angle = sin(greenwich_hour_angle * TO_RADIANS);
+	double cos_greenwich_hour_angle = cos(greenwich_hour_angle * TO_RADIANS);
+
+	// LN1035–1037
+	//       u=c*x+s*y
+	//       v=c*y-s*x
+	//       w=z
+	coordinates[X] = cos_greenwich_hour_angle * coordinates_x + sin_greenwich_hour_angle * coordinates_y;
+	coordinates[Y] = cos_greenwich_hour_angle * coordinates_y - sin_greenwich_hour_angle * coordinates_x;
 }

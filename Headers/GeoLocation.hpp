@@ -37,23 +37,21 @@ class GeoLocation
 		GeoLocation(double, double, double, Datetime);
 		~GeoLocation();
 
-		// getters
+		// GETTERS
 		Datetime* datetime();
 		double* ECEF_coordinates();
 		void ECEF_coordinates(double[]);
-		double* sun_coordinates();
-		void sun_coordinates(double[]);
-		double* moon_coordinates();
-		void moon_coordinates(double[]);
+		double* solar_coordinates();
+		void solar_coordinates(double[]);
+		double* lunar_coordinates();
+		void lunar_coordinates(double[]);
 		double* tide_coordinates();
 		void tide_coordinates(double[]);
 
-		// sun, moon, tide
+		// SUN, MOON, TIDE
 		void calculate_geocentric_solar_coordinates();
 		void calculate_geocentric_lunar_coordinates();
 
-		// transforms
-		void rotate_around_3_axis(double[], double[], double);
 
 	private:
 		const double _latitude;
@@ -63,16 +61,19 @@ class GeoLocation
 		double _ECEF[3];
 		double* _ECEF_coordinates = NULL;
 
-		double _prime_vertical_radius;
+		// double _prime_vertical_radius;
 
-		double _sun[3];
-		double* _sun_coordinates = NULL;
-		double _moon[3];
-		double* _moon_coordinates = NULL;
-		double _tide[3];
-		double* _tide_coordinates = NULL;
+		double _solar_coordinates[3];
+		double* _solar_coordinates_dynamic = NULL;
+		double _lunar_coordinates[3];
+		double* _lunar_coordinates_dynamic = NULL;
+		double _tide_coordinates[3];
+		double* _tide_coordinates_dynamic = NULL;
 
 		Datetime _datetime;
+
+		// TRANSFORMS
+		void rotate_coordinates_about_GreenwichHourAngle_radians(double[]);
 
 		double lunar_ecliptic_longitude_for_year_2000(double, double, double, double, double);
 		double lunar_ecliptic_latitude_for_year_2000(double, double, double, double, double, double);

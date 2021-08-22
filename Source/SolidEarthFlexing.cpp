@@ -85,9 +85,9 @@ int main(int arg_count, char* arg_variables[])
 		geolocation.calculate_geocentric_lunar_coordinates();
 
 		double sun[3];
-		geolocation.sun_coordinates(sun);
+		geolocation.solar_coordinates(sun);
 		double moon[3];
-		geolocation.moon_coordinates(moon);
+		geolocation.lunar_coordinates(moon);
 
 	// }
 	
