@@ -33,10 +33,10 @@ enum
 class GeoLocation
 {
 	public:
-		GeoLocation(double, double, Datetime);
-		GeoLocation(double, double, double, Datetime);
-		GeoLocation(double, double, double, double, double);
-		GeoLocation(double, double, double, double, double, double);
+		GeoLocation(double latitude, double longitude, Datetime);
+		GeoLocation(double latitude, double longitude, double altitude, Datetime);
+		GeoLocation(double latitude, double longitude, double year, double month, double day);
+		GeoLocation(double latitude, double longitude, double altitude, double year, double month, double day);
 
 		// GETTERS
 		Datetime* datetime();
