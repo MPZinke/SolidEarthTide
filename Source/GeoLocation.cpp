@@ -16,20 +16,26 @@
 
 // ——————————————————————————————————————————— CONSTRUCTORS & DESTRUCTORS ——————————————————————————————————————————— //
 
-// LN969:      subroutine geoxyz(gla,glo,eht,x,y,z)
-// LN971: *** convert geodetic lat, long, ellip ht. to x,y,z
 // Constructor for Geolocation to default altitude to 0 by calling GeoLocation::Geolocation(....).
+/* LN969:
+|      subroutine geoxyz(gla,glo,eht,x,y,z)
+[...] LN971
+|*** convert geodetic lat, long, ellip ht. to x,y,z
+*/
 GeoLocation::GeoLocation(double latitude, double longitude, Datetime datetime)
 : GeoLocation(latitude, longitude, 0, datetime)
 {}
 
 
-// LN969:      subroutine geoxyz(gla,glo,eht,x,y,z)
-// LN971: *** convert geodetic lat, long, ellip ht. to x,y,z
 // Constructor for Geolocation with altitude parameter.
 // Converts LLA (Latitude, Longitude, Altitude) to ECEF.
 // Formula from solid.f confirmed by: http://danceswithcode.net/engineeringnotes/geodetic_to_ecef/geodetic_to_ecef.html
 // Labels: https://en.wikipedia.org/wiki/Geographic_coordinate_conversion#From_geodetic_to_ECEF_coordinates
+/* LN969:
+|      subroutine geoxyz(gla,glo,eht,x,y,z)
+[...] LN971
+|*** convert geodetic lat, long, ellip ht. to x,y,z
+*/
 GeoLocation::GeoLocation(double latitude, double longitude, double altitude, Datetime datetime)
 : _latitude{latitude}, _longitude{longitude}, _altitude{altitude}, _datetime{datetime}
 {
