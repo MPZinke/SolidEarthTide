@@ -154,6 +154,7 @@ void GeoLocation::tide_coordinates(double copy_array[])
 
 
 // ———————————————————————————————————————————————— SUN, MOON, TIDE ————————————————————————————————————————————————— //
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————— //
 
 // LN880–890
 //       subroutine sunxyz(mjd,fmjd,rs,lflag)
@@ -231,6 +232,213 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 }
 
 
+// LN717–728
+//       subroutine moonxyz(mjd,fmjd,rm,lflag)
+// 
+// *** get low-precision, geocentric coordinates for moon (ECEF)
+// *** UTC version
+// 
+// *** input:  mjd/fmjd, is Modified Julian Date (and fractional) in UTC time
+// *** output: rm, is geocentric lunar position vector [m] in ECEF
+// ***         lflag  -- leap second table limit flag,  false:flag not raised
+// *** 1."satellite orbits: models, methods, applications" montenbruck & gill(2000)
+// *** section 3.3.2, pg. 72-73
+// *** 2."astronomy on the personal computer, 4th ed." montenbruck & pfleger (2005)
+// *** section 3.2, pg. 38-39  routine MiniMoon
+void GeoLocation::calculate_geocentric_lunar_coordinates()
+{
+	// LN737
+	// *** use TT for lunar ephemerides
+	// LN745–746
+	// *** julian centuries since 1.5 january 2000 (J2000)
+	// ***   (note: also low precision use of mjd --> tjd)
+	// LN749
+	//       t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
+	double JulianCenturies = _datetime.JulianCenturies_since_1stJanuary2000();
+
+	// LN751–763
+	// *** el0 -- mean longitude of Moon (deg)
+	// *** el  -- mean anomaly of Moon (deg)
+	// *** elp -- mean anomaly of Sun  (deg)
+	// *** f   -- mean angular distance of Moon from ascending node (deg)
+	// *** d   -- difference between mean longitudes of Sun and Moon (deg)
+	// 
+	// *** equations 3.47, p.72
+	// 
+	//       el0=218.31617d0 + 481267.88088d0*t -1.3972*t
+	//       el =134.96292d0 + 477198.86753d0*t
+	//       elp=357.52543d0 +  35999.04944d0*t
+	//       f  = 93.27283d0 + 483202.01873d0*t
+	//       d  =297.85027d0 + 445267.11135d0*t
+	// All of the following variables are means (avgs).
+	// Unless stated otherwise, the variable specifies a lunar attribute. (EG. anomaly: lunar, solar_anomaly: solar)
+	double longitude = 218.31617 + JulianCenturies * (481267.88088 - 1.3972);
+	double anomaly = 134.96292 + 477198.86753 * JulianCenturies;
+	double solar_anomaly = 357.52543 + 35999.04944 * JulianCenturies;
+	double angular_dist = 93.27283 + 483202.01873 * JulianCenturies;
+	double delta_long = 297.85027 + 445267.11135 * JulianCenturies;
+
+	// LN765
+	// *** longitude w.r.t. equinox and ecliptic of year 2000
+	double ecliptic_longitude = Y2K_lunar_ecliptic_long(longitude, anomaly, solar_anomaly, angular_dist, delta_long);
+
+	// LN783
+	// *** latitude w.r.t. equinox and ecliptic of year 2000
+	double ecliptic_latitude = Y2K_lunar_ecliptic_lat(longitude, anomaly, solar_anomaly, angular_dist, delta_long);
+
+	// LN798
+	// *** distance from Earth center to Moon (m)
+	double lunar_distance = Earth_Moon_distance(longitude, anomaly, solar_anomaly, angular_dist, delta_long);
+
+	// LN810–815
+	// *** convert spherical ecliptic coordinates to equatorial cartesian
+	// 
+	// *** precession of equinox wrt. J2000   (p.71)
+	// 
+	//       selond=selond + 1.3972d0*t                         !*** degrees
+	ecliptic_longitude += 1.3972 * JulianCenturies;
+
+	// LN816–824
+	// *** position vector of moon (mean equinox & ecliptic of J2000) (EME2000, ICRF)
+	// ***                         (plus long. advance due to precession -- eq. above)
+	// 
+	//       oblir=23.43929111d0/rad        !*** obliquity of the J2000 ecliptic
+	// 
+	//       sselat=dsin(selatd/rad)
+	//       cselat=dcos(selatd/rad)
+	//       sselon=dsin(selond/rad)
+	//       cselon=dcos(selond/rad)
+
+	// LN826–828
+	//       t1 = rse*cselon*cselat        !*** meters          !*** eq. 3.51, p.72
+	//       t2 = rse*sselon*cselat        !*** meters          !*** eq. 3.51, p.72
+	//       t3 = rse*       sselat        !*** meters          !*** eq. 3.51, p.72
+
+}
+
+
+// LN765–781
+// *** longitude w.r.t. equinox and ecliptic of year 2000
+// PARAMS:
+// 	longitude		= el0 -- mean longitude of Moon (deg)
+// 	anomaly			= el  -- mean anomaly of Moon (deg)
+// 	solar_anomaly	= elp -- mean anomaly of Sun  (deg)
+// 	angular_dist	= f   -- mean angular distance of Moon from ascending node (deg)
+// 	delta_long		= d   -- difference between mean longitudes of Sun and Moon (deg)
+double GeoLocation::Y2K_lunar_ecliptic_long(double longitude, double anomaly, double solar_anomaly, 
+  double angular_dist, double delta_long)
+{
+
+	// It would be better to split this into parts, but I do not know what each part is.
+	// LN 767–781
+	//       selond=el0                                      !*** eq 3.48, p.72
+	//      * +22640.d0/3600.d0*dsin((el        )/rad)
+	//      * +  769.d0/3600.d0*dsin((el+el     )/rad)
+	//      * - 4586.d0/3600.d0*dsin((el-d-d    )/rad)
+	//      * + 2370.d0/3600.d0*dsin((d+d       )/rad)
+	//      * -  668.d0/3600.d0*dsin((elp       )/rad)
+	//      * -  412.d0/3600.d0*dsin((f+f       )/rad)
+	//      * -  212.d0/3600.d0*dsin((el+el-d-d )/rad)
+	//      * -  206.d0/3600.d0*dsin((el+elp-d-d)/rad)
+	//      * +  192.d0/3600.d0*dsin((el+d+d    )/rad)
+	//      * -  165.d0/3600.d0*dsin((elp-d-d   )/rad)
+	//      * +  148.d0/3600.d0*dsin((el-elp    )/rad)
+	//      * -  125.d0/3600.d0*dsin((d         )/rad)
+	//      * -  110.d0/3600.d0*dsin((el+elp    )/rad)
+	//      * -   55.d0/3600.d0*dsin((f+f-d-d   )/rad)
+	// The following reordering should invoke type promotion of all the values as doubles:
+	return longitude 
+	  + sin(anomaly) * 22640.0 / 3600.0
+	  + sin(anomaly + anomaly)  * 769.0 / 3600.0
+	  - sin(anomaly - delta_long - delta_long) * 4586.0 / 3600.0
+	  + sin(delta_long + delta_long) * 2370.0 / 3600.0
+	  - sin(solar_anomaly)  * 668.0 / 3600.0
+	  - sin(angular_dist + angular_dist) * 412.0 / 3600.0
+	  - sin(anomaly + anomaly - delta_long - delta_long) * 212.0 / 3600.0
+	  - sin(anomaly + solar_anomaly - delta_long - delta_long) * 206.0 / 3600.0
+	  + sin(anomaly + delta_long + delta_long) * 192.0 / 3600.0
+	  - sin(solar_anomaly - delta_long - delta_long) * 165.0 / 3600.0
+	  + sin(anomaly - solar_anomaly) * 148.0 / 3600.0
+	  - sin(delta_long) * 125.0 / 3600.0
+	  - sin(anomaly + solar_anomaly) * 110.0 / 3600.0
+	  - sin(angular_dist + angular_dist - delta_long - delta_long) * 55.0 / 3600.0;
+}
+
+
+// LN783
+// *** latitude w.r.t. equinox and ecliptic of year 2000
+// PARAMS:
+// 	longitude		= el0 -- mean longitude of Moon (deg)
+// 	anomaly			= el  -- mean anomaly of Moon (deg)
+// 	solar_anomaly	= elp -- mean anomaly of Sun  (deg)
+// 	angular_dist	= f   -- mean angular distance of Moon from ascending node (deg)
+// 	delta_long		= d   -- difference between mean longitudes of Sun and Moon (deg)
+double GeoLocation::Y2K_lunar_ecliptic_latitude(double longitude, double anomaly, double solar_anomaly, 
+  double angular_dist, double delta_long)
+{
+	// LN785–786
+	//       q = 412.d0/3600.d0*dsin((f+f)/rad)              !*** temporary term
+	//      *   +541.d0/3600.d0*dsin((elp)/rad)
+	// The following reordering should invoke type promotion of all the values as doubles:
+	double temp_value = sin(angular_dist+angular_dist) * 412.0 / 3600.0 + sin(angular_dist) * 541.0 / 3600.0;
+	double angular_dist_minus_delta_long_DOUBLED = angular_dist - delta_long - delta_long;  // save a few cycles
+
+	// LN788–796
+	//       selatd=                                         !*** eq 3.49, p.72
+	//      * +18520.d0/3600.d0*dsin((f+selond-el0+q)/rad)
+	//      * -  526.d0/3600.d0*dsin((f-d-d     )/rad)
+	//      * +   44.d0/3600.d0*dsin((el+f-d-d  )/rad)
+	//      * -   31.d0/3600.d0*dsin((-el+f-d-d )/rad)
+	//      * -   25.d0/3600.d0*dsin((-el-el+f  )/rad)
+	//      * -   23.d0/3600.d0*dsin((elp+f-d-d )/rad)
+	//      * +   21.d0/3600.d0*dsin((-el+f     )/rad)
+	//      * +   11.d0/3600.d0*dsin((-elp+f-d-d)/rad)
+	return sin(angular_dist+lunar_ecliptic_longitude-longitude+temp_value) * 18520.0 / 3600.0 
+	  - sin(angular_dist_minus_delta_long_DOUBLED) * 526.0 / 3600.0
+	  + sin(anomaly+angular_dist_minus_delta_long_DOUBLED) * 44.0 / 3600.0
+	  - sin(-anomaly+angular_dist_minus_delta_long_DOUBLED) * 31.0 / 3600.0
+	  - sin(-anomaly-anomaly+angular_dist) * 25.0 / 3600.0
+	  - sin(solar_anomaly+angular_dist_minus_delta_long_DOUBLED) * 23.0 / 3600.0
+	  + sin(-anomaly+angular_dist) * 21.0 / 3600.0
+	  + sin(-solar_anomaly+angular_dist_minus_delta_long_DOUBLED) * 11.0 / 3600.0
+}
+
+// LN969
+// *** distance from Earth center to Moon (m)
+// PARAMS:
+// 	longitude		= el0 -- mean longitude of Moon (deg)
+// 	anomaly			= el  -- mean anomaly of Moon (deg)
+// 	solar_anomaly	= elp -- mean anomaly of Sun  (deg)
+// 	angular_dist	= f   -- mean angular distance of Moon from ascending node (deg)
+// 	delta_long		= d   -- difference between mean longitudes of Sun and Moon (deg)
+double GeoLocation::Earth_Moon_distance(double longitude, double anomaly, double solar_anomaly, 
+  double angular_dist, double delta_long)
+{
+	double delta_long_DOUBLED = delta_long + delta_long;
+	// LN800–808
+	//       rse= 385000.d0*1000.d0                          !*** eq 3.50, p.72
+	//      *   -  20905.d0*1000.d0*dcos((el        )/rad)
+	//      *   -   3699.d0*1000.d0*dcos((d+d-el    )/rad)
+	//      *   -   2956.d0*1000.d0*dcos((d+d       )/rad)
+	//      *   -    570.d0*1000.d0*dcos((el+el     )/rad)
+	//      *   +    246.d0*1000.d0*dcos((el+el-d-d )/rad)
+	//      *   -    205.d0*1000.d0*dcos((elp-d-d   )/rad)
+	//      *   -    171.d0*1000.d0*dcos((el+d+d    )/rad)
+	//      *   -    152.d0*1000.d0*dcos((el+elp-d-d)/rad)
+	return	(double)385000.0 * 1000.0
+	  - cos(anomaly) * 20905.0 * 1000.0
+	  - cos(delta_long_DOUBLED-anomaly) * 3699.0 * 1000.0
+	  - cos(delta_long_DOUBLED) * 2956.0 * 1000.0
+	  - cos(anomaly+anomaly) * 570.0 * 1000.0
+	  + cos(anomaly+anomaly-delta_long_DOUBLED) * 246.0 * 1000.0
+	  - cos(solar_anomaly-delta_long_DOUBLED) * 205.0 * 1000.0
+	  - cos(anomaly+delta_long_DOUBLED) * 171.0 * 1000.0
+	  - cos(anomaly+solar_anomaly-delta_long_DOUBLED) * 152.0 * 1000.0
+}
+
+
+
+
 // solid.f: LN719: subroutine moonxyz(mjd,fmjd,rm,lflag)
 // ARGS:	mjd = _modified_julian,  fmjd = _fractional_modified_julian, 
 // *** get low-precision, geocentric coordinates for moon (ECEF)
@@ -245,90 +453,43 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 // *** section 3.2, pg. 38-39  routine MiniMoon
 void GeoLocation::calculate_geocentric_lunar_coordinates()
 {
-	// // LN745–749: *** julian centuries since 1.5 january 2000 (J2000)
-	// // ***   (note: also low precision use of mjd --> tjd)
-	// double centuries_TT = _datetime.modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
+	// LN745–749: *** julian centuries since 1.5 january 2000 (J2000)
+	// ***   (note: also low precision use of mjd --> tjd)
+	double centuries_TT = _datetime.modified_julian_date_to_Terrestrial_Time_julian_date_centuries();
 	
-	// // mean_lunar_longitude *** el0 -- mean longitude of Moon (deg)
-	// // mean_lunar_anomaly *** el  -- mean anomaly of Moon (deg)
-	// // mean_solar_anomaly *** elp -- mean anomaly of Sun  (deg)
-	// // mean_angular_distance *** f   -- mean angular distance of Moon from ascending node (deg)
-	// // mean_solar_lunar_longitude *** d   -- difference between mean longitudes of Sun and Moon (deg)
-	// // *** equations 3.47, p.72
-	// double mean_lunar_longitude = 218.31617 + centuries_TT * (481267.88088 - 1.3972);
-	// double mean_lunar_anomaly = 134.96292 + 477198.86753 * centuries_TT;
-	// double mean_solar_anomaly = 357.52543 + 35999.04944 * centuries_TT;
-	// double mean_angular_distance = 93.27283 + 483202.01873 * centuries_TT;
-	// double mean_solar_lunar_longitude = 297.85027 + 445267.11135 * centuries_TT;
+	// longitude *** el0 -- mean longitude of Moon (deg)
+	// anomaly *** el  -- mean anomaly of Moon (deg)
+	// solar_anomaly *** elp -- mean anomaly of Sun  (deg)
+	// angular_dist *** f   -- mean angular distance of Moon from ascending node (deg)
+	// delta_long *** d   -- difference between mean longitudes of Sun and Moon (deg)
+	// *** equations 3.47, p.72
+	double longitude = 218.31617 + centuries_TT * (481267.88088 - 1.3972);
+	double anomaly = 134.96292 + 477198.86753 * centuries_TT;
+	double solar_anomaly = 357.52543 + 35999.04944 * centuries_TT;
+	double angular_dist = 93.27283 + 483202.01873 * centuries_TT;
+	double delta_long = 297.85027 + 445267.11135 * centuries_TT;
 
-	// // LN765: *** longitude w.r.t. equinox and ecliptic of year 2000
-	// // LN767: *** eq 3.48, p.72
-	// double lunar_ecliptic_longitude = lunar_ecliptic_longitude_for_year_2000(mean_lunar_longitude,
-	// 	mean_lunar_anomaly, mean_solar_anomaly, mean_angular_distance, mean_solar_lunar_longitude);
+	// LN765: *** longitude w.r.t. equinox and ecliptic of year 2000
+	// LN767: *** eq 3.48, p.72
+	double lunar_ecliptic_longitude = lunar_ecliptic_longitude_for_year_2000(longitude,
+		anomaly, solar_anomaly, angular_dist, delta_long);
 
-	// double lunar_ecliptic_latitude = lunar_ecliptic_latitude_for_year_2000(mean_lunar_longitude,
-	// 	mean_lunar_anomaly, mean_solar_anomaly, mean_angular_distance, mean_solar_lunar_longitude,
-	// 	lunar_ecliptic_longitude);
+	double lunar_ecliptic_latitude = lunar_ecliptic_latitude_for_year_2000(longitude,
+		anomaly, solar_anomaly, angular_dist, delta_long,
+		lunar_ecliptic_longitude);
 
-	// // LN800: *** distance from Earth center to Moon (m)
-	// double earth_moon_distance = distance_from_earth_to_moon(mean_lunar_longitude, mean_lunar_anomaly,
-	// 	mean_solar_anomaly, mean_angular_distance, mean_solar_lunar_longitude, lunar_ecliptic_longitude);
-}
-
-
-// solid.f: LN765: *** longitude w.r.t. equinox and ecliptic of year 2000
-// LN767: *** eq 3.48, p.72
-	// mean_lunar_longitude *** el0 -- mean longitude of Moon (deg)
-	// mean_lunar_anomaly *** el  -- mean anomaly of Moon (deg)
-	// mean_solar_anomaly *** elp -- mean anomaly of Sun  (deg)
-	// mean_angular_distance *** f   -- mean angular distance of Moon from ascending node (deg)
-	// mean_solar_lunar_longitude *** d   -- difference between mean longitudes of Sun and Moon (deg)
-// LN767–81
-//	selond=el0                                      !*** eq 3.48, p.72
-//	* +22640.d0/3600.d0*dsin((el        )/rad)
-//	* +  769.d0/3600.d0*dsin((el+el     )/rad)
-//	* - 4586.d0/3600.d0*dsin((el-d-d    )/rad)
-//	* + 2370.d0/3600.d0*dsin((d+d       )/rad)
-//	* -  668.d0/3600.d0*dsin((elp       )/rad)
-//	* -  412.d0/3600.d0*dsin((f+f       )/rad)
-//	* -  212.d0/3600.d0*dsin((el+el-d-d )/rad)
-//	* -  206.d0/3600.d0*dsin((el+elp-d-d)/rad)
-//	* +  192.d0/3600.d0*dsin((el+d+d    )/rad)
-//	* -  165.d0/3600.d0*dsin((elp-d-d   )/rad)
-//	* +  148.d0/3600.d0*dsin((el-elp    )/rad)
-//	* -  125.d0/3600.d0*dsin((d         )/rad)
-//	* -  110.d0/3600.d0*dsin((el+elp    )/rad)
-//	* -   55.d0/3600.d0*dsin((f+f-d-d   )/rad)
-// it would be better to split this into parts, but I do not know what each part is.
-double GeoLocation::lunar_ecliptic_longitude_for_year_2000(double mean_lunar_longitude, double mean_lunar_anomaly,
-double mean_solar_anomaly, double mean_angular_distance, double mean_solar_lunar_longitude)
-{
-	double lunar_ecliptic_longitude = mean_lunar_longitude 
-		+ 6.2888888889 * sin(mean_lunar_anomaly)
-		+ .2136111111 * sin(mean_lunar_anomaly + mean_lunar_anomaly) 
-		- 1.2738888889 * sin(mean_lunar_anomaly - mean_solar_lunar_longitude - mean_solar_lunar_longitude)
-		+ .6583333333 * sin(mean_solar_lunar_longitude + mean_solar_lunar_longitude)
-		- .1855555556 * sin(mean_solar_anomaly) 
-		- .1144444444 * sin(mean_angular_distance + mean_angular_distance)
-		- .0588888889 * sin(mean_lunar_anomaly + mean_lunar_anomaly - mean_solar_lunar_longitude - mean_solar_lunar_longitude)
-		- .0572222222 * sin(mean_lunar_anomaly + mean_solar_anomaly - mean_solar_lunar_longitude - mean_solar_lunar_longitude)
-		+ .0533333333 * sin(mean_lunar_anomaly + mean_solar_lunar_longitude + mean_solar_lunar_longitude)
-		- .0458333333 * sin(mean_solar_anomaly - mean_solar_lunar_longitude - mean_solar_lunar_longitude)
-		+ .0411111111 * sin(mean_lunar_anomaly - mean_solar_anomaly)
-		- .0347222222 * sin(mean_solar_lunar_longitude)
-		- .0305555556 * sin(mean_lunar_anomaly + mean_solar_anomaly)
-		- .0152777778 * sin(mean_angular_distance + mean_angular_distance - mean_solar_lunar_longitude - mean_solar_lunar_longitude);
-
-	return lunar_ecliptic_longitude;
+	// LN800: *** distance from Earth center to Moon (m)
+	double earth_moon_distance = distance_from_earth_to_moon(longitude, anomaly,
+		solar_anomaly, angular_dist, delta_long, lunar_ecliptic_longitude);
 }
 
 
 // solid.f: LN783: *** latitude w.r.t. equinox and ecliptic of year 2000
-	// mean_lunar_longitude *** el0 -- mean longitude of Moon (deg)
-	// mean_lunar_anomaly *** el  -- mean anomaly of Moon (deg)
-	// mean_solar_anomaly *** elp -- mean anomaly of Sun  (deg)
-	// mean_angular_distance *** f   -- mean angular distance of Moon from ascending node (deg)
-	// mean_solar_lunar_longitude *** d   -- difference between mean longitudes of Sun and Moon (deg)
+	// longitude *** el0 -- mean longitude of Moon (deg)
+	// anomaly *** el  -- mean anomaly of Moon (deg)
+	// solar_anomaly *** elp -- mean anomaly of Sun  (deg)
+	// angular_dist *** f   -- mean angular distance of Moon from ascending node (deg)
+	// delta_long *** d   -- difference between mean longitudes of Sun and Moon (deg)
 	// lunar_exliptic_longitude *** selatd
 // LN7845–96: 
 //	q = 412.d0/3600.d0*dsin((f+f)/rad)              !*** temporary term
@@ -343,37 +504,36 @@ double mean_solar_anomaly, double mean_angular_distance, double mean_solar_lunar
 //	* -   23.d0/3600.d0*dsin((elp+f-d-d )/rad)
 //	* +   21.d0/3600.d0*dsin((-el+f     )/rad)
 //	* +   11.d0/3600.d0*dsin((-elp+f-d-d)/rad)
-double GeoLocation::lunar_ecliptic_latitude_for_year_2000(double mean_lunar_longitude, double mean_lunar_anomaly, 
-double mean_solar_anomaly, double mean_angular_distance, double mean_solar_lunar_longitude, 
+double GeoLocation::lunar_ecliptic_latitude_for_year_2000(double longitude, double anomaly, 
+double solar_anomaly, double angular_dist, double delta_long, 
 double lunar_ecliptic_longitude)
 {
 	// LN785: *** temporary term
-	double temp_value = 412 / 3600 * sin(mean_angular_distance + mean_angular_distance) + 541 / 3600
-		* sin(mean_angular_distance);
+	double temp_value = 412 / 3600 * sin(angular_dist + angular_dist) + 541 / 3600 * sin(angular_dist);
 
-	double mean_solar_lunar_longitude_DBL = 2 * mean_solar_lunar_longitude;
+	double mean_solar_lunar_longitude_DBL = 2 * delta_long;
 
 	// LN788: *** eq 3.49, p.72
 	double lunar_ecliptic_latitude = 18520 / 3600 
-		* sin(mean_angular_distance + lunar_ecliptic_longitude - mean_lunar_longitude + temp_value) - 526 / 3600 
-		* sin(mean_angular_distance - mean_solar_lunar_longitude_DBL) + 44 / 3600 
-		* sin(mean_lunar_anomaly + mean_angular_distance - mean_solar_lunar_longitude_DBL) - 31 / 3600
-		* sin(-mean_lunar_anomaly + mean_angular_distance - mean_solar_lunar_longitude_DBL) - 25 / 3600
-		* sin(-mean_lunar_anomaly - mean_lunar_anomaly + mean_angular_distance) - 23 / 3600
-		* sin(mean_solar_anomaly + mean_angular_distance - mean_solar_lunar_longitude_DBL) + 21 / 3600
-		* sin(-mean_lunar_anomaly + mean_angular_distance) + 11 / 3600 
-		* sin(-mean_solar_anomaly + mean_angular_distance - mean_solar_lunar_longitude_DBL);
+		* sin(angular_dist + lunar_ecliptic_longitude - longitude + temp_value) - 526 / 3600 
+		* sin(angular_dist - mean_solar_lunar_longitude_DBL) + 44 / 3600 
+		* sin(anomaly + angular_dist - mean_solar_lunar_longitude_DBL) - 31 / 3600
+		* sin(-anomaly + angular_dist - mean_solar_lunar_longitude_DBL) - 25 / 3600
+		* sin(-anomaly - anomaly + angular_dist) - 23 / 3600
+		* sin(solar_anomaly + angular_dist - mean_solar_lunar_longitude_DBL) + 21 / 3600
+		* sin(-anomaly + angular_dist) + 11 / 3600 
+		* sin(-solar_anomaly + angular_dist - mean_solar_lunar_longitude_DBL);
 
 	return lunar_ecliptic_latitude;
 }
 
 
 // solid.f LN798: *** distance from Earth center to Moon (m)
-	// mean_lunar_longitude *** el0 -- mean longitude of Moon (deg)
-	// mean_lunar_anomaly *** el  -- mean anomaly of Moon (deg)
-	// mean_solar_anomaly *** elp -- mean anomaly of Sun  (deg)
-	// mean_angular_distance *** f   -- mean angular distance of Moon from ascending node (deg)
-	// mean_solar_lunar_longitude *** d   -- difference between mean longitudes of Sun and Moon (deg)
+	// longitude *** el0 -- mean longitude of Moon (deg)
+	// anomaly *** el  -- mean anomaly of Moon (deg)
+	// solar_anomaly *** elp -- mean anomaly of Sun  (deg)
+	// angular_dist *** f   -- mean angular distance of Moon from ascending node (deg)
+	// delta_long *** d   -- difference between mean longitudes of Sun and Moon (deg)
 	// lunar_exliptic_longitude *** selatd
 // LN800:
 // rse= 385000.d0*1000.d0                          !*** eq 3.50, p.72
@@ -385,23 +545,23 @@ double lunar_ecliptic_longitude)
 // *   -    205.d0*1000.d0*dcos((elp-d-d   )/rad)
 // *   -    171.d0*1000.d0*dcos((el+d+d    )/rad)
 // *   -    152.d0*1000.d0*dcos((el+elp-d-d)/rad)
-double GeoLocation::distance_from_earth_to_moon(double mean_lunar_longitude, double mean_lunar_anomaly, 
-double mean_solar_anomaly, double mean_angular_distance, double mean_solar_lunar_longitude, 
+double GeoLocation::distance_from_earth_to_moon(double longitude, double anomaly, 
+double solar_anomaly, double angular_dist, double delta_long, 
 double lunar_ecliptic_longitude)
 {
-	double mean_solar_lunar_longitude_DBL = 2 * mean_solar_lunar_longitude;
-	double mean_lunar_anomaly_DBL = 2 * mean_lunar_anomaly;
+	double mean_solar_lunar_longitude_DBL = 2 * delta_long;
+	double mean_lunar_anomaly_DBL = 2 * anomaly;
 
 	// LN800: !*** eq 3.50, p.72
 	double earth_moon_distance = 385000000
-		- 20905000 * cos(mean_lunar_anomaly)
-		- 3699000 * cos(mean_solar_lunar_longitude_DBL - mean_lunar_anomaly)
+		- 20905000 * cos(anomaly)
+		- 3699000 * cos(mean_solar_lunar_longitude_DBL - anomaly)
 		- 2956000 * cos(mean_solar_lunar_longitude_DBL)
 		- 570000 * cos(mean_lunar_anomaly_DBL)
 		+ 246000 * cos(mean_lunar_anomaly_DBL - mean_solar_lunar_longitude_DBL)
-		- 205000 * cos(mean_solar_anomaly - mean_solar_lunar_longitude_DBL)
-		- 171000 * cos(mean_lunar_anomaly + mean_solar_lunar_longitude_DBL)
-		- 152000 * cos(mean_lunar_anomaly + mean_solar_anomaly - mean_solar_lunar_longitude_DBL);
+		- 205000 * cos(solar_anomaly - mean_solar_lunar_longitude_DBL)
+		- 171000 * cos(anomaly + mean_solar_lunar_longitude_DBL)
+		- 152000 * cos(anomaly + solar_anomaly - mean_solar_lunar_longitude_DBL);
 
 	return earth_moon_distance;
 }
