@@ -35,7 +35,8 @@ class GeoLocation
 	public:
 		GeoLocation(double, double, Datetime);
 		GeoLocation(double, double, double, Datetime);
-		~GeoLocation();
+		GeoLocation(double, double, double, double, double);
+		GeoLocation(double, double, double, double, double, double);
 
 		// GETTERS
 		Datetime* datetime();
@@ -51,34 +52,36 @@ class GeoLocation
 		// SUN, MOON, TIDE
 		void calculate_geocentric_solar_coordinates();
 		void calculate_geocentric_lunar_coordinates();
+		void calculate_geocentric_tidal_coordinates();
 
 
 	private:
+		// ATTRIBUTES
+		// ATTRIBUTES::TIME
+		Datetime _datetime;
+		// ATTRIBUTES::GEOCOORDINATES
+		// ATTRIBUTES::GEOCOORDINATES::LLA
 		const double _latitude;
 		const double _longitude;
 		const double _altitude;
-
+		// ATTRIBUTES::GEOCOORDINATES::ECEF
 		double _ECEF[3];
-		double* _ECEF_coordinates = NULL;
+		// ATTRIBUTES::GEOCOORDINATES::CALCULATED
+		double _solar_coordinates[3];
+		double _lunar_coordinates[3];
+		double _tide_coordinates[3];
 
 		// double _prime_vertical_radius;
 
-		double _solar_coordinates[3];
-		double* _solar_coordinates_dynamic = NULL;
-		double _lunar_coordinates[3];
-		double* _lunar_coordinates_dynamic = NULL;
-		double _tide_coordinates[3];
-		double* _tide_coordinates_dynamic = NULL;
-
-		Datetime _datetime;
-
-		// TRANSFORMS
-		void rotate_coordinates_about_GreenwichHourAngle_radians(double[]);
-		void rotate_coordinates_about_obliquity(double[]);
-
+		// METHODS
+		// METHODS::CALCULATION
+		// METHODS::CALCULATION::LUNAR
 		double Y2K_lunar_ecliptic_long(double, double, double, double, double);
 		double Y2K_lunar_ecliptic_lat(double, double, double, double, double, double);
 		double Earth_Moon_distance(double, double, double, double, double);
+		// METHODS::TRANSFORMS
+		void rotate_coordinates_about_GreenwichHourAngle_radians(double[]);
+		void rotate_coordinates_about_obliquity(double[]);
 };
 
 #endif

@@ -71,7 +71,7 @@ GeoLocation create_geolocation_from_user_input()
 	int month = get_number_from_cin("Month [1-12]: ", 1, 12);
 	int day = get_number_from_cin("Day [1-31]: ", 1, 31);
 
-	return GeoLocation(latitude, longitude, Datetime(year, month, day));
+	return GeoLocation(latitude, longitude, year, month, day);
 }
 
 

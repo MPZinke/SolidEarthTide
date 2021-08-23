@@ -27,6 +27,29 @@ GeoLocation::GeoLocation(double latitude, double longitude, Datetime datetime)
 {}
 
 
+// Constructor for Geolocation to default altitude to 0 by calling GeoLocation::Geolocation(....).
+/* LN969:
+|      subroutine geoxyz(gla,glo,eht,x,y,z)
+[...] LN971
+|*** convert geodetic lat, long, ellip ht. to x,y,z
+*/
+GeoLocation::GeoLocation(double latitude, double longitude, double year, double month, double day)
+: GeoLocation(latitude, longitude, 0, Datetime(year, month, day))
+{}
+
+
+// Constructor for Geolocation to default altitude to 0 by calling GeoLocation::Geolocation(....).
+/* LN969:
+|      subroutine geoxyz(gla,glo,eht,x,y,z)
+[...] LN971
+|*** convert geodetic lat, long, ellip ht. to x,y,z
+*/
+GeoLocation::GeoLocation(double latitude, double longitude, double altitude, double year, double month, double day)
+: GeoLocation(latitude, longitude, altitude, Datetime(year, month, day))
+{}
+
+
+
 // Constructor for Geolocation with altitude parameter.
 // Converts LLA (Latitude, Longitude, Altitude) to ECEF.
 // Formula from solid.f confirmed by: http://danceswithcode.net/engineeringnotes/geodetic_to_ecef/geodetic_to_ecef.html
@@ -37,7 +60,7 @@ GeoLocation::GeoLocation(double latitude, double longitude, Datetime datetime)
 |*** convert geodetic lat, long, ellip ht. to x,y,z
 */
 GeoLocation::GeoLocation(double latitude, double longitude, double altitude, Datetime datetime)
-: _latitude{latitude}, _longitude{longitude}, _altitude{altitude}, _datetime{datetime}
+: _datetime{datetime}, _latitude{latitude}, _longitude{longitude}, _altitude{altitude}
 {
 	/* LN976–980
 	|      sla=dsin(gla)
@@ -61,15 +84,6 @@ GeoLocation::GeoLocation(double latitude, double longitude, double altitude, Dat
 }
 
 
-GeoLocation::~GeoLocation()
-{
-	if(_ECEF_coordinates) delete[] _ECEF_coordinates;
-	if(_solar_coordinates_dynamic) delete[] _solar_coordinates_dynamic;
-	if(_lunar_coordinates_dynamic) delete[] _lunar_coordinates_dynamic;
-	if(_tide_coordinates_dynamic) delete[] _tide_coordinates_dynamic;
-}
-
-
 // ———————————————————————————————————————————————————— GETTERS ————————————————————————————————————————————————————— //
 
 Datetime* GeoLocation::datetime()
@@ -80,13 +94,13 @@ Datetime* GeoLocation::datetime()
 
 double* GeoLocation::ECEF_coordinates()
 {
-	if(!_ECEF_coordinates) _ECEF_coordinates = new double[3];
+	double* ECEF_coordinates_copy = new double[3];
 
-	_ECEF_coordinates[X] = _ECEF[X];
-	_ECEF_coordinates[Y] = _ECEF[Y];
-	_ECEF_coordinates[Z] = _ECEF[Z];
+	ECEF_coordinates_copy[X] = _ECEF[X];
+	ECEF_coordinates_copy[Y] = _ECEF[Y];
+	ECEF_coordinates_copy[Z] = _ECEF[Z];
 
-	return _ECEF_coordinates;
+	return ECEF_coordinates_copy;
 }
 
 
@@ -100,13 +114,13 @@ void GeoLocation::ECEF_coordinates(double copy_array[])
 
 double* GeoLocation::solar_coordinates()
 {
-	if(!_solar_coordinates_dynamic) _solar_coordinates_dynamic = new double[3];
+	double* solar_coordinates_copy = new double[3];
 
-	_solar_coordinates_dynamic[X] = _solar_coordinates[X];
-	_solar_coordinates_dynamic[Y] = _solar_coordinates[Y];
-	_solar_coordinates_dynamic[Z] = _solar_coordinates[Z];
+	solar_coordinates_copy[X] = _solar_coordinates[X];
+	solar_coordinates_copy[Y] = _solar_coordinates[Y];
+	solar_coordinates_copy[Z] = _solar_coordinates[Z];
 
-	return _solar_coordinates_dynamic;
+	return solar_coordinates_copy;
 }
 
 
@@ -120,13 +134,13 @@ void GeoLocation::solar_coordinates(double copy_array[])
 
 double* GeoLocation::lunar_coordinates()
 {
-	if(!_lunar_coordinates_dynamic) _lunar_coordinates_dynamic = new double[3];
+	double* lunar_coordinates_copy = new double[3];
 
-	_lunar_coordinates_dynamic[X] = _lunar_coordinates[X];
-	_lunar_coordinates_dynamic[Y] = _lunar_coordinates[Y];
-	_lunar_coordinates_dynamic[Z] = _lunar_coordinates[Z];
+	lunar_coordinates_copy[X] = _lunar_coordinates[X];
+	lunar_coordinates_copy[Y] = _lunar_coordinates[Y];
+	lunar_coordinates_copy[Z] = _lunar_coordinates[Z];
 
-	return _lunar_coordinates_dynamic;
+	return lunar_coordinates_copy;
 }
 
 
@@ -140,13 +154,13 @@ void GeoLocation::lunar_coordinates(double copy_array[])
 
 double* GeoLocation::tide_coordinates()
 {
-	if(!_tide_coordinates_dynamic) _tide_coordinates_dynamic = new double[3];
+	double* tide_coordinates_copy = new double[3];
 
-	_tide_coordinates_dynamic[X] = _tide_coordinates[X];
-	_tide_coordinates_dynamic[Y] = _tide_coordinates[Y];
-	_tide_coordinates_dynamic[Z] = _tide_coordinates[Z];
+	tide_coordinates_copy[X] = _tide_coordinates[X];
+	tide_coordinates_copy[Y] = _tide_coordinates[Y];
+	tide_coordinates_copy[Z] = _tide_coordinates[Z];
 
-	return _tide_coordinates_dynamic;
+	return tide_coordinates_copy;
 }
 
 
@@ -163,6 +177,8 @@ void GeoLocation::tide_coordinates(double copy_array[])
 
 // ———————————————————————————————————————————————— SUN, MOON, TIDE ————————————————————————————————————————————————— //
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————— //
+
+// —————————————————————————————————————————————————————— SUN ——————————————————————————————————————————————————————— //
 
 /* LN880–890
 |      subroutine sunxyz(mjd,fmjd,rs,lflag)
@@ -247,6 +263,8 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 	rotate_coordinates_about_GreenwichHourAngle_radians(_solar_coordinates);
 }
 
+
+// —————————————————————————————————————————————————————  MOON —————————————————————————————————————————————————————— //
 
 /* LN717–728
 |      subroutine moonxyz(mjd,fmjd,rm,lflag)
@@ -475,6 +493,56 @@ double GeoLocation::Earth_Moon_distance(double longitude, double anomaly, double
 	  - cos(solar_anomaly-delta_long_DOUBLED) * 205000.0
 	  - cos(anomaly+delta_long_DOUBLED) * 171000.0
 	  - cos(anomaly+solar_anomaly-delta_long_DOUBLED) * 152000.0;
+}
+
+// —————————————————————————————————————————————————————  TIDE —————————————————————————————————————————————————————— //
+
+/* LN110–150
+|      subroutine detide(xsta,mjd,fmjd,xsun,xmon,dxtide,lflag)
+|
+|*** computation of tidal corrections of station displacements caused
+|***    by lunar and solar gravitational attraction
+|*** UTC version
+|
+|*** step 1 (here general degree 2 and 3 corrections +
+|***         call st1idiu + call st1isem + call st1l1)
+|***   + step 2 (call step2diu + call step2lon + call step2idiu)
+|*** it has been decided that the step 3 un-correction for permanent tide
+|*** would *not* be applied in order to avoid jump in the reference frame
+|*** (this step 3 must added in order to get the mean tide station position
+|*** and to be conformed with the iag resolution.)
+|
+|*** inputs
+|***   xsta(i),i=1,2,3   -- geocentric position of the station (ITRF/ECEF)
+|***   xsun(i),i=1,2,3   -- geoc. position of the sun (ECEF)
+|***   xmon(i),i=1,2,3   -- geoc. position of the moon (ECEF)
+|***   mjd,fmjd          -- modified julian day (and fraction) (in UTC time)
+|
+|****old calling sequence*****************************************************
+|***   dmjd               -- time in mean julian date (including day fraction)
+|***   fhr=hr+zmin/60.+sec/3600.   -- hr in the day
+|
+|*** outputs
+|***   dxtide(i),i=1,2,3  -- displacement vector (ITRF)
+|***   lflag              -- leap second table limit flag, false:flag not raised
+|
+|*** author iers 1996 :  v. dehant, s. mathews and j. gipson
+|***    (test between two subroutines)
+|*** author iers 2000 :  v. dehant, c. bruyninx and s. mathews
+|***    (test in the bernese program by c. bruyninx)
+|
+|*** created:  96/03/23 (see above)
+|*** modified from dehanttideinelMJD.f by Dennis Milbert 2006sep10
+|*** bug fix regarding fhr (changed calling sequence, too)
+|*** modified to reflect table 7.5a and b IERS Conventions 2003
+|*** modified to use TT time system to call step 2 functions
+|*** sign correction by V.Dehant to match eq.16b, p.81, Conventions
+|*** applied by Dennis Milbert 2007may05
+|*** UTC version by Dennis Milbert 2018june01
+*/
+void GeoLocation::calculate_geocentric_tidal_coordinates()
+{
+
 }
 
 
