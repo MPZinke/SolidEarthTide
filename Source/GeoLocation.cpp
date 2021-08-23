@@ -185,7 +185,7 @@ void GeoLocation::calculate_geocentric_solar_coordinates()
 
 	/* LN906
 	|*** use TT for solar ephemerides
-	|LN918–921
+	[...] LN918–921
 	|      t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
 	|      emdeg = 357.5256d0 + 35999.049d0*t          !*** degrees
 	|      em    = emdeg/rad                           !*** radians
@@ -293,17 +293,14 @@ void GeoLocation::calculate_geocentric_lunar_coordinates()
 
 	/* LN765
 	|*** longitude w.r.t. equinox and ecliptic of year 2000
-	*/
-	double ecliptic_longitude = Y2K_lunar_ecliptic_long(longitude, anomaly, solar_anomaly, angular_dist, delta_long);
-
-	/* LN783
+	[...] LN783
 	|*** latitude w.r.t. equinox and ecliptic of year 2000
-	*/
-	double ecliptic_latitude = Y2K_lunar_ecliptic_lat(longitude, anomaly, solar_anomaly, angular_dist, delta_long);
-
-	/* LN798
+	[...] LN798
 	|*** distance from Earth center to Moon (m)
 	*/
+	double ecliptic_longitude = Y2K_lunar_ecliptic_long(longitude, anomaly, solar_anomaly, angular_dist, delta_long);
+	double ecliptic_latitude = Y2K_lunar_ecliptic_lat(longitude, anomaly, solar_anomaly, angular_dist, delta_long,
+	  ecliptic_longitude);
 	double lunar_distance = Earth_Moon_distance(longitude, anomaly, solar_anomaly, angular_dist, delta_long);
 
 	/* LN810–815
@@ -335,6 +332,15 @@ void GeoLocation::calculate_geocentric_lunar_coordinates()
 	/* LN830
 	|      call rot1(-oblir,t1,t2,t3,rm1,rm2,rm3)             !*** eq. 3.51, p.72
 	*/
+	rotate_coordinates_about_obliquity(_lunar_coordinates);
+
+	/* LN832–835
+	|*** convert position vector of moon to ECEF  (ignore polar motion/LOD)
+	|
+	|      call getghar(mjd,fmjd,ghar)                        !*** sec 2.3.1,p.33
+	|      call rot3(ghar,rm1,rm2,rm3,rm(1),rm(2),rm(3))      !*** eq. 2.89, p.37
+	*/
+	rotate_coordinates_about_GreenwichHourAngle_radians(_lunar_coordinates);
 }
 
 
@@ -397,14 +403,14 @@ double GeoLocation::Y2K_lunar_ecliptic_long(double longitude, double anomaly, do
 // 	solar_anomaly	= elp -- mean anomaly of Sun  (deg)
 // 	angular_dist	= f   -- mean angular distance of Moon from ascending node (deg)
 // 	delta_long		= d   -- difference between mean longitudes of Sun and Moon (deg)
-double GeoLocation::Y2K_lunar_ecliptic_latitude(double longitude, double anomaly, double solar_anomaly, 
-  double angular_dist, double delta_long)
+double GeoLocation::Y2K_lunar_ecliptic_lat(double longitude, double anomaly, double solar_anomaly, 
+  double angular_dist, double delta_long, double ecliptic_longitude)
 {
 	/* LN785–786
 	|      q = 412.d0/3600.d0*dsin((f+f)/rad)              !*** temporary term
 	|     *   +541.d0/3600.d0*dsin((elp)/rad)
-	|The following reordering should invoke type promotion of all the values as doubles:
 	*/
+	// The following reordering should invoke type promotion of all the values as doubles:
 	double temp_value = sin(angular_dist+angular_dist) * 412.0 / 3600.0 + sin(angular_dist) * 541.0 / 3600.0;
 	double angular_dist_minus_delta_long_DOUBLED = angular_dist - delta_long - delta_long;  // save a few cycles
 
@@ -419,14 +425,14 @@ double GeoLocation::Y2K_lunar_ecliptic_latitude(double longitude, double anomaly
 	|     * +   21.d0/3600.d0*dsin((-el+f     )/rad)
 	|     * +   11.d0/3600.d0*dsin((-elp+f-d-d)/rad)
 	*/
-	return sin(angular_dist+lunar_ecliptic_longitude-longitude+temp_value) * 18520.0 / 3600.0 
+	return sin(angular_dist+ecliptic_longitude-longitude+temp_value) * 18520.0 / 3600.0 
 	  - sin(angular_dist_minus_delta_long_DOUBLED) * 526.0 / 3600.0
 	  + sin(anomaly+angular_dist_minus_delta_long_DOUBLED) * 44.0 / 3600.0
 	  - sin(-anomaly+angular_dist_minus_delta_long_DOUBLED) * 31.0 / 3600.0
 	  - sin(-anomaly-anomaly+angular_dist) * 25.0 / 3600.0
 	  - sin(solar_anomaly+angular_dist_minus_delta_long_DOUBLED) * 23.0 / 3600.0
 	  + sin(-anomaly+angular_dist) * 21.0 / 3600.0
-	  + sin(-solar_anomaly+angular_dist_minus_delta_long_DOUBLED) * 11.0 / 3600.0
+	  + sin(-solar_anomaly+angular_dist_minus_delta_long_DOUBLED) * 11.0 / 3600.0;
 }
 
 /* LN969
@@ -453,15 +459,16 @@ double GeoLocation::Earth_Moon_distance(double longitude, double anomaly, double
 	|     *   -    171.d0*1000.d0*dcos((el+d+d    )/rad)
 	|     *   -    152.d0*1000.d0*dcos((el+elp-d-d)/rad)
 	*/
-	return	(double)385000.0 * 1000.0
-	  - cos(anomaly) * 20905.0 * 1000.0
-	  - cos(delta_long_DOUBLED-anomaly) * 3699.0 * 1000.0
-	  - cos(delta_long_DOUBLED) * 2956.0 * 1000.0
-	  - cos(anomaly+anomaly) * 570.0 * 1000.0
-	  + cos(anomaly+anomaly-delta_long_DOUBLED) * 246.0 * 1000.0
-	  - cos(solar_anomaly-delta_long_DOUBLED) * 205.0 * 1000.0
-	  - cos(anomaly+delta_long_DOUBLED) * 171.0 * 1000.0
-	  - cos(anomaly+solar_anomaly-delta_long_DOUBLED) * 152.0 * 1000.0
+	// The following reordering should invoke type promotion of all the values as doubles:
+	return (double)385000000.0
+	  - cos(anomaly) * 20905000.0
+	  - cos(delta_long_DOUBLED-anomaly) * 3699000.0
+	  - cos(delta_long_DOUBLED) * 2956000.0
+	  - cos(anomaly+anomaly) * 570000.0
+	  + cos(anomaly+anomaly-delta_long_DOUBLED) * 246000.0
+	  - cos(solar_anomaly-delta_long_DOUBLED) * 205000.0
+	  - cos(anomaly+delta_long_DOUBLED) * 171000.0
+	  - cos(anomaly+solar_anomaly-delta_long_DOUBLED) * 152000.0;
 }
 
 
@@ -522,15 +529,20 @@ void GeoLocation::rotate_coordinates_about_obliquity(double coordinates[3])
 	*/
 	// As seen above, the obliquity is negative in this case (which only affects sin(-1.0 * OBLIQUITY)).
 
+	// The following block can and has been statically defined
 	/* LN1015–1016
 	|      s=dsin(theta)
 	|      c=dcos(theta)
 	*/
-	//The above are defined.
 
 	/* LN1018–1020
 	|      u=x
 	|      v=c*y+s*z
 	|      w=c*z-s*y
 	*/
+	double coordinates_y = coordinates[Y];
+	double coordinates_z = coordinates[Z];  // coordinates_z is not necessary, but it's more straight forward
+
+	coordinates[Y] = COS_NEGATIVE1_OBLIQUITY * coordinates_y + SIN_NEGATIVE1_OBLIQUITY * coordinates_z;
+	coordinates[Z] = COS_NEGATIVE1_OBLIQUITY * coordinates_z + SIN_NEGATIVE1_OBLIQUITY * coordinates_y;
 }

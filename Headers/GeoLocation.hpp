@@ -74,10 +74,11 @@ class GeoLocation
 
 		// TRANSFORMS
 		void rotate_coordinates_about_GreenwichHourAngle_radians(double[]);
+		void rotate_coordinates_about_obliquity(double[]);
 
-		double lunar_ecliptic_longitude_for_year_2000(double, double, double, double, double);
-		double lunar_ecliptic_latitude_for_year_2000(double, double, double, double, double, double);
-		double distance_from_earth_to_moon(double, double, double, double, double, double);
+		double Y2K_lunar_ecliptic_long(double, double, double, double, double);
+		double Y2K_lunar_ecliptic_lat(double, double, double, double, double, double);
+		double Earth_Moon_distance(double, double, double, double, double);
 };
 
 #endif
