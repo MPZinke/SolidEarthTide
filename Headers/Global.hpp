@@ -48,15 +48,18 @@
 
 
 // GEOGRAPHY
-#define COS_OBLIQUITY (double)0.999974510191339  // cos(obliquity of the J2000 ecliptic)
 #define EQUITORIAL_RADIUS (double)6378137.0  // KM: https://www.space.com/17638-how-big-is-earth.html
 // E_SQR: geodetic ellipsoid (Moritz, 1980b)
 // E_SQR: square of the first numerical eccentricity of the ellipsoid
 #define E_SQR (double).00669438002290341574957
-#define OBLIQUITY (double)0.409092804202936
-#define ONE_MINUS_E_SQR (double)0.99330561997709658425043  // rotational flattening deform.: 1.0 - 6.69438002290341574957d-03
+#define ONE_MINUS_E_SQR (double)0.99330561997709658425043  // rot. flattening deform.: 1.0 - 6.69438002290341574957d-03
 #define OPOD (double)282.9400  // RAAN + arg.peri. (deg.)
 #define POLAR_RADIUS (double)6356000.0  // KM: https://www.space.com/17638-how-big-is-earth.html
+// OBLIQUITY
+#define COS_NEGATIVE1_OBLIQUITY (double)0.999974510191339  // cos(obliquity * -1 of the J2000 ecliptic)
+#define COS_OBLIQUITY (double)0.999974510191339  // cos(obliquity of the J2000 ecliptic)
+#define OBLIQUITY (double)0.409092804202936  // not used, but still good to know
+#define SIN_NEGATIVE1_OBLIQUITY (double)-0.00713995571357085  // sin(obliquity * -1 of the J2000 ecliptic)
 #define SIN_OBLIQUITY (double)0.00713995571357085  // sin(obliquity of the J2000 ecliptic)
 
 
