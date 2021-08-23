@@ -16,22 +16,22 @@
 
 
 // TIME::CALENDAR::CONVERSION
-#define INTERNATION_ATOMIC_TIME_TO_TERRESTRIAL_TIME 32.184
+#define INTERNATION_ATOMIC_TIME_TO_TERRESTRIAL_TIME (double)32.184
 
 #define ERA_DAYS_TO_1901 679019
-#define GREGORIAN_DAYS_TO_JULIAN_DAYS 2451545.0  // solid.f: LN918
-#define JULIAN_DAYS_IN_MONTH 30.6001
-#define JULIAN_DAYS_TO_CENTURIES 36525.0  // solid.f: LN918
-#define JULIAN_TO_REDUCED_JULIAN -0.5
-#define LOWER_MODIFIED_JULIAN 41317.0  // solid.f: LN1266: !*** lower limit, leap second table, 1972jan01
-#define MODIFIED_JULIAN_TO_JULIAN 2400000.5  // solid.f: LN917
+#define GREGORIAN_DAYS_TO_JULIAN_DAYS (double)2451545.0  // solid.f: LN918
+#define JULIAN_DAYS_IN_MONTH (double)30.6001
+#define JULIAN_DAYS_TO_CENTURIES (double)36525.0  // solid.f: LN918
+#define JULIAN_TO_REDUCED_JULIAN (double)-0.5
+#define LOWER_MODIFIED_JULIAN (double)41317.0  // solid.f: LN1266: !*** lower limit, leap second table, 1972jan01
+#define MODIFIED_JULIAN_TO_JULIAN (double)2400000.5  // solid.f: LN917
 #define MODIFIED_JULIAN_START_TO_J2000 51544
-#define UPPER_MODIFIED_JULIAN 58664.0  // solid.f: LN1264: !*** upper limit, leap second table, 2019jun30
+#define UPPER_MODIFIED_JULIAN (double)58664.0  // solid.f: LN1264: !*** upper limit, leap second table, 2019jun30
 
 // TIME::BASIC::CONVERSION
-#define APPR_DAY_IN_YEAR 365.25
-#define DAYS_IN_YEAR 365.2425
-#define DAYS_PER_MINUTE .0006944444
+#define APPR_DAY_IN_YEAR (double)365.25
+#define DAYS_IN_YEAR (double)365.2425
+#define DAYS_PER_MINUTE (double).0006944444
 #define SECONDS_IN_DAY 86400
 #define SECONDS_IN_HOUR 3600
 #define SECONDS_IN_MINUTE 60
