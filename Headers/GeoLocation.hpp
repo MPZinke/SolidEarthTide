@@ -41,13 +41,13 @@ class GeoLocation
 		// GETTERS
 		Datetime* datetime();
 		double* ECEF_coordinates();
-		void ECEF_coordinates(double[]);
+		void ECEF_coordinates(double copy_array[]);
 		double* solar_coordinates();
-		void solar_coordinates(double[]);
+		void solar_coordinates(double copy_array[]);
 		double* lunar_coordinates();
-		void lunar_coordinates(double[]);
+		void lunar_coordinates(double copy_array[]);
 		double* tide_coordinates();
-		void tide_coordinates(double[]);
+		void tide_coordinates(double copy_array[]);
 
 		// SUN, MOON, TIDE
 		void calculate_geocentric_solar_coordinates();
