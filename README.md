@@ -6,6 +6,15 @@ C++ translated version of [solid.f by Dennis Milbert](https://geodesyworld.githu
 
 As the Earth rotates the sun & moon pull on the tides and the crust. The force from these pulls and changes in ocean changes the shape of the Earth. `solid.f` by Dennis Milbert calculates the change in meters of the planet. However, because it is Fortran code, maintaining it is becoming increasingly difficult, as it is an older language. This program's aim is to allow for maintainability and object oriented practices (for code modification). Additionally, variable names are (hopefully) more spelled out, to allow for convenience in understanding what is going on. For parts of the code that I am able to find resources for, but are not well commented, I have added additional comments & resources.
 
+## Contents
+
+1. `./Headers/`—Contains header files for C++ translated code.
+2. `./SolidEarthFlexing/`—Contains Fortran code & documentation by original author.
+3. `./Source`—Contains source files for C++ translated code.
+4. `./.gitignore`—Git Ignore file so that I don't upload a bunch of junk (you're welcome).
+5. `./README.md`—This file.
+6. `./Makefile`—Makefile to compile all C++ code.
+
 ---
 
 ## Use
