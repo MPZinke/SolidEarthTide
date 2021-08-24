@@ -73,6 +73,7 @@ MAIN
 |  |  *dcos
 |  |  utc2ttt
 |  |  |  utc2tai
+|  |  |  |  getutcmtai
 |  |  |  tai2tt
 |  |  *dcos
 |  |  *dcos
@@ -87,7 +88,12 @@ MAIN
 |  moonxyz
 |  |  utc2ttt
 |  |  |  utc2tai
+|  |  |  |  getutcmtai
 |  |  |  tai2tt
+|  |  *dsin
+|  |  *dcos
+|  |  *dsin
+|  |  *dcos
 |  |  rot1
 |  |  |  *dsin
 |  |  |  *dcos
@@ -98,6 +104,7 @@ MAIN
 |  detide
 |  |  utc2ttt
 |  |  |  utc2tai
+|  |  |  |  getutcmtai
 |  |  |  tai2tt
 |  |  *int
 |  |  sprod
@@ -122,6 +129,12 @@ MAIN
 |  |  |  *dmod
 |  |  |  *dmod
 |  |  |  *dmod
+|  |  |  *sin
+|  |  |  *cos
+|  |  |  *sin
+|  |  |  *cos
+|  |  |  *cos
+|  |  |  *sin
 |  |  step2lon
 |  |  |  *dmod
 |  |  |  *dmod
@@ -138,6 +151,7 @@ MAIN
 |  |  *dsin
 |  |  *dcos
 |  mjdciv
+|  *idnint
 ```
 
 #### Subroutine/Functions

@@ -96,9 +96,9 @@ class Call:
 				break;  # why waste the clock cycles
 
 
-	def print_call(self, recursion=0, signature=False):
-		if(self.block): self.block.print_calls(recursion, signature);
-		# else: print("{}*{}".format("|  " * (recursion), self.name));
+	def print_call(self, recursion=0, **kwargs):
+		if(self.block): self.block.print_calls(recursion, **kwargs);
+		elif(kwargs.get("print_undefined", False)): print("{}*{}".format("|  " * (recursion), self.name));
 
 
 
@@ -168,11 +168,11 @@ class Block:
 		return ""
 
 
-	def print_calls(self, recursion=0, signature=False):
-		if(signature): self.print_signature(recursion)
+	def print_calls(self, recursion=0, **kwargs):
+		if(kwargs.get("print_signature", False)): self.print_signature(recursion)
 		else: print("{}{}".format("|  " * recursion, self.name if self.is_complex else "MAIN"));
 
-		for call in self.calls: call.print_call(recursion+1, signature);
+		for call in self.calls: call.print_call(recursion+1, **kwargs);
 
 
 	def print_signature(self, recursion=0):
@@ -201,7 +201,6 @@ class ComplexBlock(Block):
 		self.params = [];
 		self.get_signature_info();
 		self.get_calls();
-
 
 
 	# Get block's name & parameters.
@@ -305,8 +304,8 @@ def get_file_contents(filename):
 		return file.readlines();
 
 
-def print_block_calls(blocks, signature=False):
-	blocks[0].print_calls(0, signature);
+def print_block_calls(blocks, **kwargs):
+	blocks[0].print_calls(0, **kwargs);
 
 
 def print_block_names(blocks):
@@ -324,9 +323,9 @@ def main():
 	lines = get_file_contents(FILENAME);
 	blocks = parse_code_blocks(lines);
 
-	# print_block_calls(blocks, True);
-	find_block(blocks, "MAIN")
-	# for block in blocks: print(block.name, [call.name for call in block.calls])
+	print_block_calls(blocks, print_signature=False, print_undefined=True);  # Prints the function call tree
+	# for block in blocks: print(block.name, [call.name for call in block.calls])  # Prints the defined functions
+	# find_block(blocks, "MAIN")
 	# print_block_names(blocks);
 	# print_block_signatures(blocks);
 
