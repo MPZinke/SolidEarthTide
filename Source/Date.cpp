@@ -25,6 +25,27 @@
 Date::Date(int year, int month, int day)
 : _year{year}, _month{month}, _day{day}
 {
+	/* LN1166–1176
+	|     if(imo.le.2) then
+	|       y=iyr-1
+	|       m=imo+12
+	|     else
+	|       y=iyr
+	|       m=imo
+	|     endif
+	|
+	|     it1=365.25d0*y
+	|     it2=30.6001d0*(m+1)
+	|     mjd=it1+it2+idy-679019
+	*/
+	int years_to_days = APPR_DAY_IN_YEAR * ((double)_year - (_month <= 2 ? 1.0 : 0.0));
+	int months_to_days = JULIAN_DAYS_IN_MONTH * (1.0 + (double)_month + (_month <= 2 ? 12.0 : 0.0));
+	_mod_julian = years_to_days + months_to_days + _day - ERA_DAYS_TO_1901;
+}
+
+
+void Date::validate()
+{
 	if(_year < 1901 || 2099 < _year) throw std::runtime_error("Year is out of range");  // validate year
 	if(_month < 1 || 12 < _month) throw std::runtime_error("Month is out of range");  // validate month
 
@@ -42,14 +63,6 @@ Date::Date(int year, int month, int day)
 	}
 	// 30 day months
 	else if(30 < _day) throw std::runtime_error("Day is out of range");
-}
-
-
-// destructor.
-// deallocates array if exists.
-Date::~Date()
-{
-	if(_date_array) delete[] _date_array;
 }
 
 
@@ -80,13 +93,13 @@ int Date::day()
 // returns a pointer to an array of copies.
 int* Date::date_array()
 {
-	if(!_date_array) _date_array = new int[3];
+	int* date_array_copy = new int[3];
 
-	_date_array[YEAR] = _year;
-	_date_array[MONTH] = _month;
-	_date_array[DAY] = _day;
+	date_array_copy[YEAR] = _year;
+	date_array_copy[MONTH] = _month;
+	date_array_copy[DAY] = _day;
 
-	return _date_array;
+	return date_array_copy;
 }
 
 
@@ -98,6 +111,12 @@ void Date::date_array(int copy_array[])
 	copy_array[YEAR] = _year;
 	copy_array[MONTH] = _month;
 	copy_array[DAY] = _day;
+}
+
+
+int Date::ModJulianDate()
+{
+	return _mod_julian;
 }
 
 
@@ -137,7 +156,7 @@ void Date::date(int year, int month, int day)
 }
 
 
-void Date::add_days(unsigned int days)
+void Date::add_days(int days)
 {
 	if(365 < _day) throw std::runtime_error("Day range is too large");  // make things easier
 
@@ -165,32 +184,4 @@ void Date::add_days(unsigned int days)
 		_day = original_date[DAY];
 		throw std::runtime_error("Year is out of range");
 	}
-}
-
-
-// ———————————————————————————————————————————————— TIME CONVERSION ————————————————————————————————————————————————— //
-
-// solid.f: LN1152: subroutine civmjd(iyr,imo,idy,ihr,imn,sec,mjd,fmjd)
-// ARGS: 	iyr = _year, imo = _month, idy = _day, ihr = _hour, imn = _minute, sec = _second, 
-//			mjd = modified_julian, fmjd = fractional_modified_julian
-// *** convert civil date to modified julian date
-// *** imo in range 1-12, idy in range 1-31
-// *** only valid in range mar-1900 thru feb-2100     (leap year protocols)
-// *** ref: hofmann-wellenhof, 2nd ed., pg 34-35
-// *** operation confirmed against table 3.3 values on pg.34
-int Date::modified_julian_date()
-{
-	int year = _year;
-	int month = _month;
-	if(_month < 2)
-	{
-		year--;
-		month += 12;
-	}
-	int days_of_era = DAYS_IN_YEAR * (double)year;
-	int months_of_year_in_days = JULIAN_DAYS_IN_MONTH * (double)(month + 1);
-	int modified_julian = days_of_era + months_of_year_in_days + _day - ERA_DAYS_TO_1901;
-
-	_modified_julian = modified_julian;
-	return modified_julian;
 }

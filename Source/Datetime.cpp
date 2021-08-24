@@ -39,12 +39,6 @@ Datetime::Datetime(int year, int month, int day, int hour, int minute, double se
 }
 
 
-Datetime::~Datetime()
-{
-	if(_time) delete _time;
-}
-
-
 // Converts Civil Time to Modified Julian Date.
 /* LN 1151-1158
 |      subroutine civmjd(iyr,imo,idy,ihr,imn,sec,mjd,fmjd)
@@ -62,19 +56,7 @@ void Datetime::CivilTime_to_ModifiedJulianDate()
 	|      if(iyr.lt.1900) stop 34588
 	*/
 	if(_year < 1900) throw std::runtime_error("Year is less than allowable year");  // this shouldn't ever happen
-	/* LN1166–1178
-	|     if(imo.le.2) then
-	|       y=iyr-1
-	|       m=imo+12
-	|     else
-	|       y=iyr
-	|       m=imo
-	|     endif
-	|
-	|     it1=365.25d0*y
-	|     it2=30.6001d0*(m+1)
-	|     mjd=it1+it2+idy-679019
-	|
+	/* LN 1178
 	|     fmjd=(3600*ihr+60*imn+sec)/86400.d0
 	*/
 	int years_to_days = APPR_DAY_IN_YEAR * ((double)_year - (_month <= 2 ? 1.0 : 0.0));
@@ -171,7 +153,7 @@ void Datetime::set_initial_JulianDate()
 {
 	/* LN1053
 	|     common/mjdoff/mjd0
-	[   ] LN1057–1071
+	[...] LN1057–1071
 	|      if(imo.le.2) then
 	|        y=iyr-1
 	|        m=imo+12
@@ -220,29 +202,23 @@ double Datetime::second()
 }
 
 
-int* Datetime::time_array()
+double* Datetime::time_array()
 {
-	if(!_time) _time = new int[3];
+	double* time_copy = new double[3];
 
-	_time[HOUR] = _hour;
-	_time[MINUTE] = _minute;
-	_time[SECOND] = _second;
+	time_copy[HOUR] = _hour;
+	time_copy[MINUTE] = _minute;
+	time_copy[SECOND] = _second;
 
-	return _time;
+	return time_copy;
 }
 
 
-void Datetime::time_array(int copy_array[])
+void Datetime::time_array(double copy_array[])
 {
 	copy_array[HOUR] = _hour;
 	copy_array[MINUTE] = _minute;
 	copy_array[SECOND] = _second;
-}
-
-
-int Datetime::ModJulianDate()
-{
-	return _mod_julian;
 }
 
 
@@ -280,7 +256,7 @@ void Datetime::minute(int minute)
 }
 
 
-void Datetime::second(int second)
+void Datetime::second(double second)
 {
 	_second = second;
 }

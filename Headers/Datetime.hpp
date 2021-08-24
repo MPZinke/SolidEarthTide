@@ -33,55 +33,64 @@ class Datetime : public Date
 		// CONSTRUCTOR
 		Datetime(int, int, int);
 		Datetime(int, int, int, int, int, double);
+
+		// GETTERS
+		// GETTERS::BASIC
+		// GETTERS::BASIC::SINGLE
+		int hour();
+		int minute();
+		double second();
+		// GETTERS::BASIC::MULTIPLE
+		double* time_array();  // returns a pointer to an array of {hour, minute, second}
+		void time_array(double copy_array[]);  // copies to an array of {hour, minute, second}
+		double* datetime_array();  // returns a pointer to an array of {year, month, day, hour, minute, second}
+		void datetime_array(double copy_array[]);  // copies to an array of {year, month, day, hour, minute, second}
+		// GETTERS::SPECIFIC
+		double FractionalModJulianDate();
+		bool leap_second_flag();
+
+		// SETTERS
+		// SETTERS::BASIC
+		// SETTERS::BASIC::SINGLE
+		void hour(int);
+		void minute(int);
+		void second(double);
+		// SETTERS::BASIC::MULTIPLE
+		void time(int, int, double);
+		void add_time(double);
+		// SETTERS::SPECIFIC
+		void leap_second_flag(bool state);
+
+		// CONVERSION
+		double GreenwichHourAngle_radians();
+		double JulianCenturies_since_1stJanuary2000();
+		Date date();
+
+	private:
+		// ATTRIBUTES
+		// ATTRIBUTES::BASIC
+		int _hour;
+		int _minute;
+		double _second;
+		// ATTRIBUTES::SPECIFIC
+		// ATTRIBUTES::SPECIFIC::JULIAN
+		double _fractional_mod_julian;  // Fractional Modified Julian Date
+		// ATTRIBUTES::SPECIFIC::CHANGES
+		bool _leap_second_flag = false;
+
+		// CONSTRUCTOR
 		// CONSTRUCTOR::CALLED
 		void CivilTime_to_ModifiedJulianDate();
 		void ModifiedJulianDate_to_CivilTime();
 		void set_initial_JulianDate();
-		// DESTRUCTOR
-		~Datetime();
-
-		// GETTERS
-		int hour();
-		int minute();
-		double second();
-		int ModJulianDate();
-		double FractionalModJulianDate();
-		int* time_array();  // returns a pointer to an array of {hour, minute, second}
-		void time_array(int[]);  // copies to an array of {hour, minute, second}
-		int* datetime_array();  // returns a pointer to an array of {year, month, day, hour, minute, second}
-		void datetime_array(int[]);  // copies to an array of {year, month, day, hour, minute, second}
-
-		// SETTERS
-		void hour(int);
-		void minute(int);
-		void second(int);
-		void time(int, int, double);
-		void add_time(double);
-
-		// CONVERSION
+		// METHODS
+		// METHODS::CONVERSION
 		double FMJD_to_TerrestrialTime();
 		double FMJD_to_UTC();
-		double GreenwichHourAngle_radians();
 		double InternationalAtomicTime();
 		double InternationalAtomicTime_to_TerrestrialTime(double);
 		double JulianDate_converter();
-		double JulianCenturies_since_1stJanuary2000();
 		double TerrestrialTime_seconds();
-
-		Date date();
-
-	private:
-		int _hour;
-		int _minute;
-		double _second;
-
-		double _initial_mod_julian;  // initial Modified Julian Date
-		double _mod_julian;  // Modified Julian Date
-		double _fractional_mod_julian;  // Fractional Modified Julian Date
-
-		bool _leap_second_flag = false;
-
-		int* _time = NULL;
 };
 
 
