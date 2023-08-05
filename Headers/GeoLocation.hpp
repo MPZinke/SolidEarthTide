@@ -1,87 +1,26 @@
 
-/***********************************************************************************************************************
-*                                                                                                                      *
-*   created by: MPZinke                                                                                                *
-*   on ..                                                                                                              *
-*                                                                                                                      *
-*   DESCRIPTION: TEMPLATE                                                                                              *
-*   BUGS:                                                                                                              *
-*   FUTURE:                                                                                                            *
-*                                                                                                                      *
-***********************************************************************************************************************/
 
-
-#ifndef _GeoLocation_
-#define _GeoLocation_
-
-
-#include <cmath>
-
-
-#include "Datetime.hpp"
-#include "Global.hpp"
-
-
-enum
-{
-	X,
-	Y,
-	Z
-};
-
-
-class GeoLocation
+class Geolocation
 {
 	public:
-		GeoLocation(double latitude, double longitude, Datetime);
-		GeoLocation(double latitude, double longitude, double altitude, Datetime);
-		GeoLocation(double latitude, double longitude, double year, double month, double day);
-		GeoLocation(double latitude, double longitude, double altitude, double year, double month, double day);
+		/*
+		solid.f [LN 22–23]
+		```
+		      a=6378137.d0
+		      e2=6.69438002290341574957d-03
+		```
+		a = EQUITORIAL_RADIUS
+		e2 = E_SQR
+		*/
+		static const double EQUITORIAL_RADIUS;  // KM: https://www.space.com/17638-how-big-is-earth.html
+		// E_SQR: geodetic ellipsoid (Moritz, 1980b)
+		// E_SQR: square of the first numerical eccentricity of the ellipsoid
+		static const double GEODETIC_ELLIPSOID;
 
-		// GETTERS
-		Datetime* datetime();
-		double* ECEF_coordinates();
-		void ECEF_coordinates(double copy_array[]);
-		double* solar_coordinates();
-		void solar_coordinates(double copy_array[]);
-		double* lunar_coordinates();
-		void lunar_coordinates(double copy_array[]);
-		double* tide_coordinates();
-		void tide_coordinates(double copy_array[]);
-
-		// SUN, MOON, TIDE
-		void calculate_geocentric_solar_coordinates();
-		void calculate_geocentric_lunar_coordinates();
-		void calculate_geocentric_tidal_coordinates();
-
+		Geolocation(double latitude_degrees, double longitude_degrees);
+		friend void operator<<(double cartesian_coordinates[3], Geolocation& geolocation);
 
 	private:
-		// ATTRIBUTES
-		// ATTRIBUTES::TIME
-		Datetime _datetime;
-		// ATTRIBUTES::GEOCOORDINATES
-		// ATTRIBUTES::GEOCOORDINATES::LLA
-		const double _latitude;
-		const double _longitude;
-		const double _altitude;
-		// ATTRIBUTES::GEOCOORDINATES::ECEF
-		double _ECEF[3];
-		// ATTRIBUTES::GEOCOORDINATES::CALCULATED
-		double _solar_coordinates[3];
-		double _lunar_coordinates[3];
-		double _tide_coordinates[3];
-
-		// double _prime_vertical_radius;
-
-		// METHODS
-		// METHODS::CALCULATION
-		// METHODS::CALCULATION::LUNAR
-		double Y2K_lunar_ecliptic_long(double, double, double, double, double);
-		double Y2K_lunar_ecliptic_lat(double, double, double, double, double, double);
-		double Earth_Moon_distance(double, double, double, double, double);
-		// METHODS::TRANSFORMS
-		void rotate_coordinates_about_GreenwichHourAngle_radians(double[]);
-		void rotate_coordinates_about_obliquity(double[]);
+		const double _latitude;  // Radians
+		const double _longitude;  // Radians
 };
-
-#endif

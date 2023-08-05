@@ -26,7 +26,7 @@ ARG_REGEX = r"[a-zA-Z0-9,_ \t\.\*\+\-/]*";  # get parameters from between parent
 TOKEN_REGEX = r"[a-zA-Z_][a-zA-Z0-9_]*"  # standard token (C, Fortran, ASCII python, etc)
 # VARIABLE_ASSIGNMENT_REGEX: Token with a possible array index (in this case, the author only uses i as an index).
 # Use case uses declaration context VARIABLE_DECLARATION_REGEX to determine whether it is a function or an array.
-VARIABLE_ASSIGNMENT_REGEX = r"      [ \t]*"+TOKEN_REGEX+r"[ \t]*(\([a-zA-Z]?[0-9]*\))?[ \t]*=";
+VARIABLE_ASSIGNMENT_REGEX = rf"      \s*{TOKEN_REGEX}\s*(\([a-zA-Z]?[0-9]*\))?\s*=";
 VARIABLE_DECLARATION_REGEX = r"(      dimension |      logical |      double precision )"
 
 # Function & subroutine
