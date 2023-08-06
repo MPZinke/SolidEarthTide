@@ -266,3 +266,26 @@ idy — _day
 	unsigned int modified_julian_date = it1 + it2 + _day - 679019;
 	return modified_julian_date;
 }
+
+
+double Datetime::to_TerrestrialTime()
+/*
+```
+|*** use TT for solar ephemerides
+|
+|      leapflag=lflag
+|      tsecutc=fmjd*86400.d0                       !*** UTC time (sec of day)
+|      tsectt =utc2ttt(tsecutc)                    !*** TT  time (sec of day)
+|      fmjdtt =tsectt/86400.d0                     !*** TT  time (fract. day)
+|      lflag   = leapflag
+|
+|*** julian centuries since 1.5 january 2000 (J2000)
+|***   (note: also low precision use of mjd --> tjd)
+|
+|      tjdtt = mjd+fmjdtt+2400000.5d0              !*** Julian Date, TT
+|      t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
+```
+*/
+{
+
+}

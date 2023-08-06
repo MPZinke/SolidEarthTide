@@ -120,8 +120,8 @@ solid.f [LN 42...61]
 |      xsta(3)=z0
 ```
 */
-	double xyz[3];
 	Geolocation location = geolocation_from_user();
+	double xyz[3];
 	xyz << location;
 
 	/*
@@ -139,5 +139,18 @@ solid.f [LN 42...61]
 	Datetime time = date_from_user();
 	Datetime normalized_datetime = time.normalize();
 	int initial_modified_julian_date = normalized_datetime.initial_modified_julian_date();
+
+	/*
+	solid.f [LN 77–78]
+	```
+	|      tdel2=1.d0/60.d0/24.d0                           !*** 1 minute steps
+	|      do iloop=0,60*24
+	```
+	*/
+	for(int minute = 0; minute < 1440 /* minutes in a day */; minute++)
+	{
+		
+	}
+
 }
 

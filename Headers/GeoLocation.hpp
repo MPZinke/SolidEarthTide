@@ -1,5 +1,17 @@
 
 
+class Datetime;
+
+
+typedef struct
+{
+	double X;
+	double Y;
+	double Z;
+} Coordinate;
+
+
+
 class Geolocation
 {
 	public:
@@ -17,8 +29,28 @@ class Geolocation
 		// E_SQR: square of the first numerical eccentricity of the ellipsoid
 		static const double GEODETIC_ELLIPSOID;
 
+		/*
+		solid.f [LN 899...904]
+		```
+		|*** mean elements for year 2000, sun ecliptic orbit wrt. Earth
+		⋮
+		|      opod=282.9400d0               !*** RAAN + arg.peri.  (deg.)
+		```
+		obe — OBLIQUITY
+		sobe — SIN_OBLIQUITY
+		cobe — COS_OBLIQUITY
+		opod — OPOD
+		*/
+		static const double OBLIQUITY;  // 0.409092804202936: (23.43929111 / rad) obliquity of the J2000 ecliptic
+		static const double COS_OBLIQUITY;  // 0.999974510191339: cos(obliquity of the J2000 ecliptic)
+		static const double SIN_OBLIQUITY;  // 0.00713995571357085: sin(obliquity of the J2000 ecliptic)
+		static const double OPOD;  // 282.9400: RAAN + arg.peri. (deg.)
+
 		Geolocation(double latitude_degrees, double longitude_degrees);
 		friend void operator<<(double cartesian_coordinates[3], Geolocation& geolocation);
+		operator Coordinate();
+
+		Coordinate sun_coordinates(Datetime& datetime);
 
 	private:
 		const double _latitude;  // Radians
