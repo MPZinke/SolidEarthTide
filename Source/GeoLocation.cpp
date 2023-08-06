@@ -6,7 +6,7 @@
 #include <cmath>
 
 
-#include "Global.hpp"
+#include "JulianDate.hpp"
 
 
 // FROM: https://stackoverflow.com/a/57285400
@@ -166,7 +166,7 @@ solid.f [LN 57–61]
 }
 
 
-Coordinate Geolocation::sun_coordinates(Datetime& datetime)
+Coordinate Geolocation::sun_coordinates(Datetime& datetime, JulianDate& julian_date)
 /*
 solid.f [LN 880–897]
 ```
@@ -201,6 +201,16 @@ rs<->rsun — sun coordinates: double[3]
 	|		static const double OPOD;  // 282.9400: RAAN + arg.peri. (deg.)
 	```
 	*/
+
+	/*
+	solid.f [LN 906...918]
+	```
+	|*** use TT for solar ephemerides
+	⋮
+	|      t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
+	```
+	*/
+	double TerrestrialTime_seconds = julian_date.to_TerrestrialTime();
 
 	/*
 	|      emdeg = 357.5256d0 + 35999.049d0*t          !*** degrees

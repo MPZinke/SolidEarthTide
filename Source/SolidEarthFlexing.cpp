@@ -145,9 +145,10 @@ solid.f [LN 42...61]
 	|      call setjd0(iyr,imo,idy)
 	```
 	*/
-	JulianDate julian_date = (JulianDate)date;
-	Datetime normalized_datetime = (Datetime)julian_date;
-	int initial_modified_julian_date = normalized_datetime.initial_modified_julian_date();
+	JulianDate julian_date = (JulianDate)date;  // achieves writing to `mjd`, `fmjd`
+	Datetime normalized_datetime = (Datetime)julian_date;  // achieves writing to `iyr`,`imo`,`idy`,`ihr`,`imn`,`sec`
+	int initial_modified_julian_date = ((JulianDate)normalized_datetime).modified_julian_date();
+	// ^ achieves setting `mjd0`
 
 	/*
 	solid.f [LN 77–78]
@@ -160,6 +161,5 @@ solid.f [LN 42...61]
 	{
 		
 	}
-
 }
 

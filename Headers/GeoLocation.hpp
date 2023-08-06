@@ -1,6 +1,7 @@
 
 
 class Datetime;
+class JulianDate;
 
 
 typedef struct
@@ -53,7 +54,7 @@ class Geolocation
 		// friend void operator<<(double cartesian_coordinates[3], Geolocation& geolocation);
 		operator Coordinate();
 
-		Coordinate sun_coordinates(Datetime& datetime);
+		Coordinate sun_coordinates(Datetime& datetime, JulianDate& julian_date);
 
 	private:
 		const double _latitude;  // Radians
