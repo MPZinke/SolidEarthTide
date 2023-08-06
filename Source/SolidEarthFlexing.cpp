@@ -4,6 +4,7 @@
 
 
 #include "Geolocation.hpp"
+#include "Datetime.hpp"
 
 
 template<class T>
@@ -24,25 +25,44 @@ T get_number_from_cin(std::string message, T min, T max)
 }
 
 
-// Date date_from_user()
-// {
-// 	/*
-// 	solid.f [LN 30–40]
-// 	```
-// 	|    1 write(*,'(a$)') 'Enter year    [1901-2099]: '
-// 	|      read(*,*) iyr
-// 	|      if(iyr.lt.1901.or.iyr.gt.2099) go to 1
-// 	|
-// 	|    2 write(*,'(a$)') 'Enter month number [1-12]: '
-// 	|      read(*,*) imo
-// 	|      if(imo.lt.1.or.imo.gt.12) go to 2
-// 	|
-// 	|    3 write(*,'(a$)') 'Enter day          [1-31]: '
-// 	|      read(*,*) idy
-// 	|      if(idy.lt.1.or.idy.gt.31) go to 3
-// 	```
-// 	*/
-// }
+Datetime date_from_user()
+{
+	/*
+	solid.f [LN 30–40]
+	```
+	|    1 write(*,'(a$)') 'Enter year    [1901-2099]: '
+	|      read(*,*) iyr
+	|      if(iyr.lt.1901.or.iyr.gt.2099) go to 1
+	|
+	|    2 write(*,'(a$)') 'Enter month number [1-12]: '
+	|      read(*,*) imo
+	|      if(imo.lt.1.or.imo.gt.12) go to 2
+	|
+	|    3 write(*,'(a$)') 'Enter day          [1-31]: '
+	|      read(*,*) idy
+	|      if(idy.lt.1.or.idy.gt.31) go to 3
+	```
+	*/
+	int year = get_number_from_cin("Year [1901-2099]: ", 1901, 2099);
+	int month = get_number_from_cin("Month [1-12]: ", 1, 12);
+	int day = get_number_from_cin("Day [1-31]: ", 1, 31);
+
+	/*
+	solid.f [LN 70–72]
+	```
+	|      ihr=   0
+	|      imn=   0
+	|      sec=0.d0                                         !*** UTC time system
+	```
+	is achieved by
+	Datetime.hpp [LN 7–8]
+	```
+	|		Datetime(unsigned int year, unsigned int month=1, unsigned int day=1, unsigned int hour=0,
+	|		  unsigned int minute=0, unsigned int second=0);
+	```
+	*/
+	return Datetime(year, month, day);
+}
 
 
 Geolocation geolocation_from_user()
@@ -77,26 +97,42 @@ Geolocation geolocation_from_user()
 
 
 int main()
+/*
+solid.f [LN 1...612]
+```
+|	      program solid
+⋮
+|      implicit double precision(a-h,o-z)
+|      dimension rsun(3),rmoon(3),etide(3),xsta(3)
+|      logical lflag                    !*** leap second table limit flag
+|      common/stuff/rad,pi,pi2
+|      common/comgrs/a,e2
+|
+|      write(*,*) 'program solid -- UTC version -- 2018jun01'
+```
+*/
 {
-	/*
-	solid.f [LN 1–12]
-	```
-	|	      program solid
-	|
-	|*** driver to test solid earth tide
-	|*** UTC version
-	|
-	|      implicit double precision(a-h,o-z)
-	|      dimension rsun(3),rmoon(3),etide(3),xsta(3)
-	|      logical lflag                    !*** leap second table limit flag
-	|      common/stuff/rad,pi,pi2
-	|      common/comgrs/a,e2
-	|
-	|      write(*,*) 'program solid -- UTC version -- 2018jun01'
-	```
-	*/
+/*
+solid.f [LN 42...61]
+```
+|    4 write(*,'(a$)') 'Lat. (pos N.) [- 90, +90]: '
+⋮
+|      xsta(3)=z0
+```
+*/
 	double xyz[3];
 	Geolocation location = geolocation_from_user();
 	xyz << location;
+
+	/*
+	solid.f [LN 70...75]
+	```
+	|      ihr=   0
+	⋮
+	|      call setjd0(iyr,imo,idy)
+	```
+	*/
+	Datetime time = date_from_user();
+	Datetime normalized_datetime = time.normalize();
 }
 

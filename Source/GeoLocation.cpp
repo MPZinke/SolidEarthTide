@@ -44,6 +44,7 @@ solid.f [LN 57–61]
 	|      w=dsqrt(w2)
 	|      en=a/w
 	```
+	en — prime_vertical_radius
 	*/
 	double sin_latitude = 0;
 	double cos_latitude = 0;
@@ -56,7 +57,7 @@ solid.f [LN 57–61]
 	```
 	|      eht0=0.d0
 	```
-	eht0 — altitude
+	eht0 <=> eht — Altitude
 	*/
 	const double altitude = 0.0;
 
@@ -70,6 +71,7 @@ solid.f [LN 57–61]
 	|      z=(en*(1.d0-e2)+eht)*sla
 	```
 	e2 — GEODETIC_ELLIPSOID
+
 	*/
 	cartesian_coordinates[X] = (prime_vertical_radius+altitude) * cos_latitude * cos(geolocation._longitude * Trig::RADIANS);
 	cartesian_coordinates[Y] = (prime_vertical_radius+altitude) * cos_latitude * sin(geolocation._longitude * Trig::RADIANS);
