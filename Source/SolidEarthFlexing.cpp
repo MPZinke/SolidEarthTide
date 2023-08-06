@@ -125,8 +125,12 @@ solid.f [LN 42...61]
 	xyz << location;
 
 	/*
-	solid.f [LN 70...75]
+	solid.f [LN 30...40,70...75]
 	```
+	|    1 write(*,'(a$)') 'Enter year    [1901-2099]: '
+	⋮
+	|      if(idy.lt.1.or.idy.gt.31) go to 3
+
 	|      ihr=   0
 	⋮
 	|      call setjd0(iyr,imo,idy)
@@ -134,5 +138,6 @@ solid.f [LN 42...61]
 	*/
 	Datetime time = date_from_user();
 	Datetime normalized_datetime = time.normalize();
+	int initial_modified_julian_date = normalized_datetime.initial_modified_julian_date();
 }
 

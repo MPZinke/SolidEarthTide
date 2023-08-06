@@ -24,6 +24,7 @@ class Datetime
 		  unsigned int minute=0, unsigned int second=0);
 
 		Datetime normalize();
+		unsigned int initial_modified_julian_date();
 
 		void civil_datetime_to_modified_julian_datetime(unsigned int& modified_julian_date, double& fractional_modified_julian_date);
 		Datetime modified_julian_datetime_to_civil_datetime(unsigned int modified_julian_date, double fractional_modified_julian_date);
