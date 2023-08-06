@@ -5,6 +5,7 @@
 
 #include "Geolocation.hpp"
 #include "Datetime.hpp"
+#include "JulianDate.hpp"
 
 
 template<class T>
@@ -121,8 +122,6 @@ solid.f [LN 42...61]
 ```
 */
 	Geolocation location = geolocation_from_user();
-	double xyz[3];
-	xyz << location;
 
 	/*
 	solid.f [LN 30...40,70...75]
@@ -136,8 +135,18 @@ solid.f [LN 42...61]
 	|      call setjd0(iyr,imo,idy)
 	```
 	*/
-	Datetime time = date_from_user();
-	Datetime normalized_datetime = time.normalize();
+	Datetime date = date_from_user();
+
+	/*
+	solid.f [LN 73–75]
+	```
+	|      call civmjd(iyr,imo,idy,ihr,imn,sec,mjd,fmjd)
+	|      call mjdciv(mjd,fmjd,iyr,imo,idy,ihr,imn,sec)    !*** normalize civil time
+	|      call setjd0(iyr,imo,idy)
+	```
+	*/
+	JulianDate julian_date = (JulianDate)date;
+	Datetime normalized_datetime = (Datetime)julian_date;
 	int initial_modified_julian_date = normalized_datetime.initial_modified_julian_date();
 
 	/*

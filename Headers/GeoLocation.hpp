@@ -15,6 +15,9 @@ typedef struct
 class Geolocation
 {
 	public:
+		static const long double PI;
+		static const long double RADIAN;
+
 		/*
 		solid.f [LN 22–23]
 		```
@@ -47,7 +50,7 @@ class Geolocation
 		static const double OPOD;  // 282.9400: RAAN + arg.peri. (deg.)
 
 		Geolocation(double latitude_degrees, double longitude_degrees);
-		friend void operator<<(double cartesian_coordinates[3], Geolocation& geolocation);
+		// friend void operator<<(double cartesian_coordinates[3], Geolocation& geolocation);
 		operator Coordinate();
 
 		Coordinate sun_coordinates(Datetime& datetime);
