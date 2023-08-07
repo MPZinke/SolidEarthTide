@@ -6,6 +6,9 @@ class Datetime;
 class JulianDate
 {
 	public:
+		static const unsigned int MJDUPPER;
+		static const unsigned int MJDLOWER;
+
 		JulianDate(unsigned int modified_julian_date, double fractional_modified_julian_date);
 		operator Datetime();
 

@@ -209,8 +209,9 @@ rs<->rsun — sun coordinates: double[3]
 	⋮
 	|      t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
 	```
+	t — terrestrial_time
 	*/
-	double TerrestrialTime_seconds = julian_date.to_TerrestrialTime();
+	double terrestrial_time = julian_date.to_TerrestrialTime();
 
 	/*
 	|      emdeg = 357.5256d0 + 35999.049d0*t          !*** degrees
