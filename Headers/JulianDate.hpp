@@ -1,5 +1,8 @@
 
 
+#include "Coordinate.hpp"
+
+
 class Datetime;
 
 
@@ -13,11 +16,11 @@ class JulianDate
 		operator Datetime();
 
 		unsigned int modified_julian_date();
-		double to_TerrestrialTime();
-		double UTC_to_TerrestrialTime(double time_seconds_UTC);
-		double UTC_to_TAI(double time_seconds_UTC);
-		double TAI_to_TerrestrialTime(double time_seconds_UTC);
-		double UTC_minus_TAI(double time_seconds_UTC);
+		double to_TerrestrialTime(unsigned int initial_modified_julian_date);
+		double UTC_to_TerrestrialTime(unsigned int initial_modified_julian_date);
+		double UTC_to_TAI(unsigned int initial_modified_julian_date);
+
+		double GreenwichHourAngleRadians();
 
 	private:
 		const unsigned int _modified_julian_date;

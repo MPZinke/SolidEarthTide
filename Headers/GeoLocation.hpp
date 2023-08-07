@@ -1,16 +1,10 @@
 
 
+#include "Coordinate.hpp"
+
+
 class Datetime;
 class JulianDate;
-
-
-typedef struct
-{
-	double X;
-	double Y;
-	double Z;
-} Coordinate;
-
 
 
 class Geolocation
@@ -52,9 +46,9 @@ class Geolocation
 
 		Geolocation(double latitude_degrees, double longitude_degrees);
 		// friend void operator<<(double cartesian_coordinates[3], Geolocation& geolocation);
-		operator Coordinate();
+		operator Coordinate<double>();
 
-		Coordinate sun_coordinates(Datetime& datetime, JulianDate& julian_date);
+		Coordinate<double> sun_coordinates(unsigned int initial_modified_julian_date, JulianDate& julian_date);
 
 	private:
 		const double _latitude;  // Radians

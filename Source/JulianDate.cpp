@@ -7,6 +7,7 @@
 
 
 #include "Datetime.hpp"
+#include "Geolocation.hpp"
 
 
 const unsigned int JulianDate::MJDUPPER = 58664;
@@ -104,64 +105,39 @@ fmjd —
 }
 
 
-double JulianDate::to_TerrestrialTime()
+double JulianDate::to_TerrestrialTime(unsigned int initial_modified_julian_date)
 {
 	/*
+	solid.f [LN 737–739...741]
 	```
 	|*** use TT for solar ephemerides
 	|
 	|      leapflag=lflag
-	|      tsecutc=fmjd*86400.d0                       !*** UTC time (sec of day)
+	⋮
 	|      tsectt =utc2ttt(tsecutc)                    !*** TT  time (sec of day)
-	|      fmjdtt =tsectt/86400.d0                     !*** TT  time (fract. day)
-	|      lflag   = leapflag
 	```
-	tsecutc — time_seconds_UTC
+	tsecutc — time_seconds_UTC (Declared in UTC_to_TAI)
 	tsectt — time_seconds_TerrestrialTime
-	fmjdtt — fractional_modified_julian_date_TT
-	*/
-	double time_seconds_UTC = _fractional_modified_julian_date * 86400.0;
-	double time_seconds_TerrestrialTime = UTC_to_TerrestrialTime(time_seconds_UTC);
-	double fractional_modified_julian_date_TT = time_seconds_TerrestrialTime / 86400.0;
 
-	/*
-	```
-	|*** julian centuries since 1.5 january 2000 (J2000)
-	|***   (note: also low precision use of mjd --> tjd)
+	solid.f [LN 1221–1228]
+	|```
+	|      double precision function utc2ttt(tutc)
 	|
-	|      tjdtt = mjd+fmjdtt+2400000.5d0              !*** Julian Date, TT
-	|      t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
+	|*** convert utc (sec) to terrestrial time (sec)
+	|
+	|      implicit double precision(a-h,o-z)
+	|
+	|      ttai   = utc2tai(tutc)
+	|      utc2ttt= tai2tt(ttai)
 	```
-	t — TerrestrialTime_seconds
+	tutc — time_seconds_UTC
+	ttai — time_seconds_TAI
+	utc2ttt<->tai2tt — time_seconds_TerrestrialTime
 	*/
-	double tjdtt = _modified_julian_date + fractional_modified_julian_date_TT + 2400000.5;
-	double TerrestrialTime_seconds = (tjdtt - 2451545.0) / 36525.0;
-	return TerrestrialTime_seconds;
-}
-
-
-double JulianDate::to_TerrestrialTime(double time_seconds_UTC)
-/*
-solid.f [LN 1221–1228]
-|```
-|      double precision function utc2ttt(tutc)
-|
-|*** convert utc (sec) to terrestrial time (sec)
-|
-|      implicit double precision(a-h,o-z)
-|
-|      ttai   = utc2tai(tutc)
-|      utc2ttt= tai2tt(ttai)
-```
-tutc — time_seconds_UTC
-ttai — time_seconds_TAI
-utc2ttt — time_seconds_TerrestrialTime
-*/
-{
-	double time_seconds_TAI = UTC_to_TAI(time_seconds_UTC);
+	double time_seconds_TAI = UTC_to_TAI(initial_modified_julian_date);
 
 	/*
-	solid.f [LN 415–417...421–422]
+	solid.f [LN 415–417...421–422, 1228]
 	```
 	|      double precision function tai2tt(ttai)
 	|
@@ -169,17 +145,36 @@ utc2ttt — time_seconds_TerrestrialTime
 	⋮
 	|***** http://tycho.usno.navy.mil/systime.html
 	|      tai2tt = ttai + 32.184d0
+
+	|      utc2ttt= tai2tt(ttai)
 	```
 	ttai — time_seconds_TAI
-	tai2tt — time_seconds_TerrestrialTime
+	utc2ttt<->tai2tt — time_seconds_TerrestrialTime
 	*/
 	double time_seconds_TerrestrialTime = time_seconds_TAI + 32.184;
 
-	return time_seconds_TerrestrialTime;
+	/*
+	solid.f [LN 911, 914–918]
+	```
+	|      fmjdtt =tsectt/86400.d0                     !*** TT  time (fract. day)
+
+	|*** julian centuries since 1.5 january 2000 (J2000)
+	|***   (note: also low precision use of mjd --> tjd)
+	|
+	|      tjdtt = mjd+fmjdtt+2400000.5d0              !*** Julian Date, TT
+	|      t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
+	```
+	t — TerrestrialTime_seconds
+	fmjdtt — fractional_modified_julian_date_TT
+	*/
+	double fractional_modified_julian_date_TT = time_seconds_TerrestrialTime / 86400.0;
+	double tjdtt = _modified_julian_date + fractional_modified_julian_date_TT + 2400000.5;
+	double TerrestrialTime_seconds = (tjdtt - 2451545.0) / 36525.0;
+	return TerrestrialTime_seconds;
 }
 
 
-double JulianDate::UTC_to_TAI(double time_seconds_UTC)
+double JulianDate::UTC_to_TAI(unsigned int initial_modified_julian_date)
 /*
 solid.f [LN 1245–1254]
 ```
@@ -198,6 +193,14 @@ tutc — time_seconds_UTC
 mjd0 — initial_modified_julian_date
 */
 {
+	/*
+	solid.f [LN 909] (from solid.f subroutine `sunxyz`)
+	```
+	|      tsecutc=fmjd*86400.d0                       !*** UTC time (sec of day)
+	```
+	*/
+	double time_seconds_UTC = _fractional_modified_julian_date * 86400.0;
+
 	/*
 	solid.f [LN 1256–1266]
 	```
@@ -233,7 +236,6 @@ mjd0 — initial_modified_julian_date
 	|      endif
 	```
 	*/
-	unsigned int initial_modified_julian_date;
 	for(int limit = 365*2100; time_seconds_UTC >= 86400.0 && limit > 0; limit--)
 	{
 		time_seconds_UTC -= 86400.0;
@@ -247,6 +249,7 @@ mjd0 — initial_modified_julian_date
 	}
 
 	/*
+	solid.f [LN 1292–1306]
 	```
 	|*** test upper table limit         (upper limit set by bulletin C memos)
 	|
@@ -414,4 +417,82 @@ mjd0 — initial_modified_julian_date
 	}
 
 	throw std::runtime_error("FATAL ERROR: Fell through tests in GPS leap");
+}
+
+
+double JulianDate::GreenwichHourAngleRadians()
+/*
+solid.f [LN ]
+```
+|      subroutine getghar(mjd,fmjd,ghar)
+|
+|*** convert mjd/fmjd in UTC time to Greenwich hour angle (in radians)
+|
+|*** "satellite orbits: models, methods, applications" montenbruck & gill(2000)
+|*** section 2.3.1, pg. 33
+```
+*/
+{
+	/*
+	solid.f [LN ]
+	```
+	|*** need UTC to get sidereal time ("astronomy on the personal computer", 4th ed)
+	|***                               (pg.43, montenbruck & pfleger, springer, 2005)
+	|
+	|      tsecutc=fmjd*86400.d0                        !*** UTC time (sec of day)
+	|      fmjdutc=tsecutc/86400.d0                     !*** UTC time (fract. day)
+	|
+	|***** d = MJD - 51544.5d0                               !*** footnote
+	|      d =(mjd-51544) + (fmjdutc-0.5d0)                  !*** days since J2000
+	```
+	*/
+	double time_seconds_UTC = _fractional_modified_julian_date;
+	double fractional_modified_julian_date_UTC = time_seconds_UTC / 86400.0;
+	double days_since_J2000 = (_modified_julian_date - 51544) + (fractional_modified_julian_date_UTC - 0.5);
+
+	/*
+	solid.f [LN ]
+	```
+	|*** greenwich hour angle for J2000  (12:00:00 on 1 Jan 2000)
+	|
+	|***** ghad = 100.46061837504d0 + 360.9856473662862d0*d  !*** eq. 2.85 (+digits)
+	|      ghad = 280.46061837504d0 + 360.9856473662862d0*d  !*** corrn.   (+digits)
+	|
+	|**** normalize to 0-360 and convert to radians
+	|
+	|      i    = ghad/360.d0
+	```
+	*/
+	double GreenwichHourAngleDegrees = 280.46061837504 + 360.9856473662862 * days_since_J2000;
+	int i = GreenwichHourAngleDegrees / 360.0;
+
+	/*
+	solid.f [LN ]
+	```
+	|      ghar =(ghad-i*360.d0)/rad
+	|    1 if(ghar.gt.pi2) then
+	|        ghar=ghar-pi2
+	|        go to 1
+	|      endif
+	|    2 if(ghar.lt.0.d0) then
+	|        ghar=ghar+pi2
+	|        go to 2
+	|      endif
+	|
+	|      return
+	|      end
+	```
+	*/
+	double GreenwichHourAngleRadians = (GreenwichHourAngleDegrees - i * 360.0) / Geolocation::RADIAN;
+	for(int limit = 360; limit >= 0 && GreenwichHourAngleRadians > (Geolocation::PI * 2); limit--)
+	{
+		GreenwichHourAngleRadians -= Geolocation::PI * 2;
+	}
+
+	for(int limit = 360; limit >= 0 && GreenwichHourAngleRadians < 0; limit--)
+	{
+		GreenwichHourAngleRadians += Geolocation::PI * 2;
+	}
+
+	return GreenwichHourAngleRadians;
 }

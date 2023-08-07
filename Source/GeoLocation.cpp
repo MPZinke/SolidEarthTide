@@ -6,6 +6,7 @@
 #include <cmath>
 
 
+#include "Coordinate.hpp"
 #include "JulianDate.hpp"
 
 
@@ -106,7 +107,7 @@ Geolocation::Geolocation(double latitude_degrees, double longitude_degrees)
 // }
 
 
-Geolocation::operator Coordinate()
+Geolocation::operator Coordinate<double>()
 /*
 solid.f [LN 57–61]
 ```
@@ -158,15 +159,15 @@ solid.f [LN 57–61]
 	e2 — GEODETIC_ELLIPSOID
 
 	*/
-	return (Coordinate){
+	return Coordinate<double>(
 	  /* X = */(prime_vertical_radius+altitude) * cos_latitude * cos(this -> _longitude * (double)Geolocation::RADIAN),
 	  /* Y = */(prime_vertical_radius+altitude) * cos_latitude * sin(this -> _longitude * (double)Geolocation::RADIAN),
 	  /* Z = */(prime_vertical_radius*(1.0-Geolocation::GEODETIC_ELLIPSOID) + altitude) * sin_latitude
-	};
+	);
 }
 
 
-Coordinate Geolocation::sun_coordinates(Datetime& datetime, JulianDate& julian_date)
+Coordinate<double> Geolocation::sun_coordinates(unsigned int initial_modified_julian_date, JulianDate& julian_date)
 /*
 solid.f [LN 880–897]
 ```
@@ -211,13 +212,25 @@ rs<->rsun — sun coordinates: double[3]
 	```
 	t — terrestrial_time
 	*/
-	double terrestrial_time = julian_date.to_TerrestrialTime();
+	double terrestrial_time = julian_date.to_TerrestrialTime(initial_modified_julian_date);
 
 	/*
+	solid.f [LN ]
+	```
 	|      emdeg = 357.5256d0 + 35999.049d0*t          !*** degrees
 	|      em    = emdeg/rad                           !*** radians
 	|      em2   = em+em                               !*** radians
-	|
+	```
+	emdeg — solar_ephemerides_degrees
+	em — solar_ephemerides
+	em2 — 
+	*/
+	double solar_ephemerides_degrees = 357.5256 + 35999.049 * terrestrial_time;
+	double solar_ephemerides = solar_ephemerides_degrees / Geolocation::RADIAN;
+
+	/*
+	solid.f [LN ]
+	```
 	|*** series expansions in mean anomaly, em   (eq. 3.43, p.71)
 	|
 	|      r=(149.619d0-2.499d0*dcos(em)-0.021d0*dcos(em2))*1.d9      !*** m.
@@ -226,7 +239,17 @@ rs<->rsun — sun coordinates: double[3]
 	|*** precession of equinox wrt. J2000   (p.71)
 	|
 	|      slond=slond + 1.3972d0*t                              !*** degrees
-	|
+	```
+	r — radius
+	slond — solar_longitude_degrees
+	*/
+	double radius = (149.619 - 2.499 * cos(solar_ephemerides) - 0.021 * cos(solar_ephemerides * 2)) * 1000000000;
+	double solar_longitude_degrees = (6892.0 * sin(solar_ephemerides) + 72.0 * sin(solar_ephemerides * 2)) / 3600.0 
+	  + Geolocation::OPOD + solar_ephemerides_degrees + 1.3972 * terrestrial_time;
+
+	/*
+	solid.f [LN ]
+	```
 	|*** position vector of sun (mean equinox & ecliptic of J2000) (EME2000, ICRF)
 	|***                        (plus long. advance due to precession -- eq. above)
 	|
@@ -237,16 +260,33 @@ rs<->rsun — sun coordinates: double[3]
 	|      rs1 = r*cslon              !*** meters             !*** eq. 3.46, p.71
 	|      rs2 = r*sslon*cobe         !*** meters             !*** eq. 3.46, p.71
 	|      rs3 = r*sslon*sobe         !*** meters             !*** eq. 3.46, p.71
-	|
+	```
+	slon — solar_longitude
+	sslon — sin_solar_longitude
+	cslon — cos_solar_longitude
+	rs1 — radius_solar_coordinates_X
+	rs2 — radius_solar_coordinates_Y
+	rs3 — radius_solar_coordinates_Z
+	*/
+	double solar_longitude = solar_longitude_degrees / Geolocation::RADIAN;
+	double cos_solar_longitude = cos(solar_longitude);
+	double sin_solar_longitude = sin(solar_longitude);
+
+	Coordinate<double> radius_solar_coordinates(
+		radius * cos_solar_longitude,
+		radius * sin_solar_longitude * Geolocation::COS_OBLIQUITY,
+		radius * sin_solar_longitude * Geolocation::SIN_OBLIQUITY
+	);
+
+	/*
+	solid.f [LN ]
+	```
 	|*** convert position vector of sun to ECEF  (ignore polar motion/LOD)
 	|
 	|      call getghar(mjd,fmjd,ghar)                        !*** sec 2.3.1,p.33
 	|      call rot3(ghar,rs1,rs2,rs3,rs(1),rs(2),rs(3))      !*** eq. 2.89, p.37
-	|
-	|      return
-	|      end
 	```
 	*/
-
-
+	double GreenwichHourAngleRadians = julian_date.GreenwichHourAngleRadians();
+	return radius_solar_coordinates.rotate3(GreenwichHourAngleRadians);
 }
