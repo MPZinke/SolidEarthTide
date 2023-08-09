@@ -466,29 +466,41 @@ Coordinate<double> moon_coordinates(unsigned int initial_modified_julian_date, J
 		+ factors[7] * cos((mean_lunar_anomaly + mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
 		+ factors[8] * cos((mean_lunar_and_solar_anomaly - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN);
 
+	/*
+	```
+	|*** convert spherical ecliptic coordinates to equatorial cartesian
+	|
+	|*** precession of equinox wrt. J2000   (p.71)
+	|
+	|      selond=selond + 1.3972d0*t                         !*** degrees
+	```
+	*/
+	double solar_ecliptic_longitude_degrees += 1.3972 * terrestrial_time;
+
+	/*
+	```
+	|*** position vector of moon (mean equinox & ecliptic of J2000) (EME2000, ICRF)
+	|***                         (plus long. advance due to precession -- eq. above)
+	|
+	|      oblir=23.43929111d0/rad        !*** obliquity of the J2000 ecliptic
+	|
+	|      sselat=dsin(selatd/rad)
+	|      cselat=dcos(selatd/rad)
+	|      sselon=dsin(selond/rad)
+	|      cselon=dcos(selond/rad)
+	|
+	|      t1 = rse*cselon*cselat        !*** meters          !*** eq. 3.51, p.72
+	|      t2 = rse*sselon*cselat        !*** meters          !*** eq. 3.51, p.72
+	|      t3 = rse*       sselat        !*** meters          !*** eq. 3.51, p.72
+	```
+	*/
+	double obliquity_ecliptic_radians = 23.43929111 / Geolocation::RADIAN;
+
+	double sin_solar_ecliptic_latitude = sin(solar_ecliptic_latitude_degrees / Geolocation::RADIAN);
+	double cos_solar_ecliptic_latitude = cos(solar_ecliptic_latitude_degrees / Geolocation::RADIAN);
 
 /*
 ```
-|*** convert spherical ecliptic coordinates to equatorial cartesian
-|
-|*** precession of equinox wrt. J2000   (p.71)
-|
-|      selond=selond + 1.3972d0*t                         !*** degrees
-|
-|*** position vector of moon (mean equinox & ecliptic of J2000) (EME2000, ICRF)
-|***                         (plus long. advance due to precession -- eq. above)
-|
-|      oblir=23.43929111d0/rad        !*** obliquity of the J2000 ecliptic
-|
-|      sselat=dsin(selatd/rad)
-|      cselat=dcos(selatd/rad)
-|      sselon=dsin(selond/rad)
-|      cselon=dcos(selond/rad)
-|
-|      t1 = rse*cselon*cselat        !*** meters          !*** eq. 3.51, p.72
-|      t2 = rse*sselon*cselat        !*** meters          !*** eq. 3.51, p.72
-|      t3 = rse*       sselat        !*** meters          !*** eq. 3.51, p.72
-|
 |      call rot1(-oblir,t1,t2,t3,rm1,rm2,rm3)             !*** eq. 3.51, p.72
 |
 |*** convert position vector of moon to ECEF  (ignore polar motion/LOD)
