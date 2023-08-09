@@ -290,3 +290,172 @@ rs<->rsun — sun coordinates: double[3]
 	double GreenwichHourAngleRadians = julian_date.GreenwichHourAngleRadians();
 	return radius_solar_coordinates.rotate3(GreenwichHourAngleRadians);
 }
+
+
+Coordinate<double> moon_coordinates(unsigned int initial_modified_julian_date, JulianDate& julian_date)
+/*
+```
+|      subroutine moonxyz(mjd,fmjd,rm,lflag)
+|
+|*** get low-precision, geocentric coordinates for moon (ECEF)
+|*** UTC version
+|
+|*** input:  mjd/fmjd, is Modified Julian Date (and fractional) in UTC time
+|*** output: rm, is geocentric lunar position vector [m] in ECEF
+|***         lflag  -- leap second table limit flag,  false:flag not raised
+|*** 1."satellite orbits: models, methods, applications" montenbruck & gill(2000)
+|*** section 3.3.2, pg. 72-73
+|*** 2."astronomy on the personal computer, 4th ed." montenbruck & pfleger (2005)
+|*** section 3.2, pg. 38-39  routine MiniMoon
+```
+*/
+{
+	/*
+	```
+	|      t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
+	```
+	*/
+		double terrestrial_time = julian_date.to_TerrestrialTime(initial_modified_julian_date);
+
+	/*
+	```
+	|*** el0 -- mean longitude of Moon (deg)
+	|*** el  -- mean anomaly of Moon (deg)
+	|*** elp -- mean anomaly of Sun  (deg)
+	|*** f   -- mean angular distance of Moon from ascending node (deg)
+	|*** d   -- difference between mean longitudes of Sun and Moon (deg)
+	|
+	|*** equations 3.47, p.72
+	|
+	|      el0=218.31617d0 + 481267.88088d0*t -1.3972*t
+	|      el =134.96292d0 + 477198.86753d0*t
+	|      elp=357.52543d0 +  35999.04944d0*t
+	|      f  = 93.27283d0 + 483202.01873d0*t
+	|      d  =297.85027d0 + 445267.11135d0*t
+	```
+	el0 — mean_lunar_longitude
+	el — mean_lunar_anomaly
+	elp — mean_solar_anomaly
+	f — mean_lunar_angular_distance
+	d — mean_lunar_and_solar_difference
+	*/
+	double mean_lunar_longitude = 218.31617 + 481267.88088 * terrestrial_time - 1.3972 * terrestrial_time;
+	double mean_lunar_anomaly = 134.96292 + 477198.86753 * terrestrial_time;
+	double mean_solar_anomaly = 357.52543 + 35999.04944 * terrestrial_time;
+	double mean_lunar_angular_distance = 93.27283 + 483202.01873 * terrestrial_time;
+	double mean_lunar_and_solar_difference = 297.85027 + 445267.11135 * terrestrial_time;
+
+	double mean_lunar_and_solar_anomaly = mean_lunar_anomaly + mean_solar_anomaly;
+
+	/*
+	```
+	|*** longitude w.r.t. equinox and ecliptic of year 2000
+	|
+	|      selond=el0                                      !*** eq 3.48, p.72
+	|     * +22640.d0/3600.d0*dsin((el        )/rad)
+	|     * +  769.d0/3600.d0*dsin((el+el     )/rad)
+	|     * - 4586.d0/3600.d0*dsin((el-d-d    )/rad)
+	|     * + 2370.d0/3600.d0*dsin((d+d       )/rad)
+	|     * -  668.d0/3600.d0*dsin((elp       )/rad)
+	|     * -  412.d0/3600.d0*dsin((f+f       )/rad)
+	|     * -  212.d0/3600.d0*dsin((el+el-d-d )/rad)
+	|     * -  206.d0/3600.d0*dsin((el+elp-d-d)/rad)
+	|     * +  192.d0/3600.d0*dsin((el+d+d    )/rad)
+	|     * -  165.d0/3600.d0*dsin((elp-d-d   )/rad)
+	|     * +  148.d0/3600.d0*dsin((el-elp    )/rad)
+	|     * -  125.d0/3600.d0*dsin((d         )/rad)
+	|     * -  110.d0/3600.d0*dsin((el+elp    )/rad)
+	|     * -   55.d0/3600.d0*dsin((f+f-d-d   )/rad)
+	```
+	*/
+	double solar_ecliptic_longitude_degrees = mean_lunar_longitude
+		+ 22640.0 / 3600.0
+			* sin(mean_lunar_anomaly                                                          / Geolocation::RADIAN)
+		+   769.0 / 3600.0
+			* sin(((mean_lunar_anomaly * 2))                                                  / Geolocation::RADIAN)
+		-  4586.0 / 3600.0
+			* sin((mean_lunar_anomaly - (mean_lunar_and_solar_difference * 2))                / Geolocation::RADIAN)
+		+  2370.0 / 3600.0
+			* sin(((mean_lunar_and_solar_difference * 2))                                     / Geolocation::RADIAN)
+		-   668.0 / 3600.0
+			* sin(mean_solar_anomaly                                                          / Geolocation::RADIAN)
+		-   412.0 / 3600.0
+			* sin(((mean_lunar_angular_distance * 2))                                         / Geolocation::RADIAN)
+		-   212.0 / 3600.0
+			* sin(((mean_lunar_anomaly * 2) - (mean_lunar_and_solar_difference * 2))          / Geolocation::RADIAN)
+		-   206.0 / 3600.0
+			* sin((mean_lunar_and_solar_anomaly - (mean_lunar_and_solar_difference * 2))      / Geolocation::RADIAN)
+		+   192.0 / 3600.0
+			* sin((mean_lunar_anomaly + (mean_lunar_and_solar_difference * 2))                / Geolocation::RADIAN)
+		-   165.0 / 3600.0
+			* sin((mean_solar_anomaly - (mean_lunar_and_solar_difference * 2))                / Geolocation::RADIAN)
+		+   148.0 / 3600.0
+			* sin((mean_lunar_anomaly - mean_solar_anomaly)                                   / Geolocation::RADIAN)
+		-   125.0 / 3600.0
+			* sin(mean_lunar_and_solar_difference                                             / Geolocation::RADIAN)
+		-   110.0 / 3600.0
+			* sin((mean_lunar_and_solar_anomaly)                                              / Geolocation::RADIAN)
+		-    55.0 / 3600.0
+			* sin(((mean_lunar_angular_distance * 2) - (mean_lunar_and_solar_difference * 2)) / Geolocation::RADIAN);
+}
+
+/*
+```
+|*** latitude w.r.t. equinox and ecliptic of year 2000
+|
+|      q = 412.d0/3600.d0*dsin((f+f)/rad)              !*** temporary term
+|     *   +541.d0/3600.d0*dsin((elp)/rad)
+|
+|      selatd=                                         !*** eq 3.49, p.72
+|     * +18520.d0/3600.d0*dsin((f+selond-el0+q)/rad)
+|     * -  526.d0/3600.d0*dsin((f-d-d     )/rad)
+|     * +   44.d0/3600.d0*dsin((el+f-d-d  )/rad)
+|     * -   31.d0/3600.d0*dsin((-el+f-d-d )/rad)
+|     * -   25.d0/3600.d0*dsin((-el-el+f  )/rad)
+|     * -   23.d0/3600.d0*dsin((elp+f-d-d )/rad)
+|     * +   21.d0/3600.d0*dsin((-el+f     )/rad)
+|     * +   11.d0/3600.d0*dsin((-elp+f-d-d)/rad)
+|
+|*** distance from Earth center to Moon (m)
+|
+|      rse= 385000.d0*1000.d0                          !*** eq 3.50, p.72
+|     *   -  20905.d0*1000.d0*dcos((el        )/rad)
+|     *   -   3699.d0*1000.d0*dcos((d+d-el    )/rad)
+|     *   -   2956.d0*1000.d0*dcos((d+d       )/rad)
+|     *   -    570.d0*1000.d0*dcos((el+el     )/rad)
+|     *   +    246.d0*1000.d0*dcos((el+el-d-d )/rad)
+|     *   -    205.d0*1000.d0*dcos((elp-d-d   )/rad)
+|     *   -    171.d0*1000.d0*dcos((el+d+d    )/rad)
+|     *   -    152.d0*1000.d0*dcos((el+elp-d-d)/rad)
+|
+|*** convert spherical ecliptic coordinates to equatorial cartesian
+|
+|*** precession of equinox wrt. J2000   (p.71)
+|
+|      selond=selond + 1.3972d0*t                         !*** degrees
+|
+|*** position vector of moon (mean equinox & ecliptic of J2000) (EME2000, ICRF)
+|***                         (plus long. advance due to precession -- eq. above)
+|
+|      oblir=23.43929111d0/rad        !*** obliquity of the J2000 ecliptic
+|
+|      sselat=dsin(selatd/rad)
+|      cselat=dcos(selatd/rad)
+|      sselon=dsin(selond/rad)
+|      cselon=dcos(selond/rad)
+|
+|      t1 = rse*cselon*cselat        !*** meters          !*** eq. 3.51, p.72
+|      t2 = rse*sselon*cselat        !*** meters          !*** eq. 3.51, p.72
+|      t3 = rse*       sselat        !*** meters          !*** eq. 3.51, p.72
+|
+|      call rot1(-oblir,t1,t2,t3,rm1,rm2,rm3)             !*** eq. 3.51, p.72
+|
+|*** convert position vector of moon to ECEF  (ignore polar motion/LOD)
+|
+|      call getghar(mjd,fmjd,ghar)                        !*** sec 2.3.1,p.33
+|      call rot3(ghar,rm1,rm2,rm3,rm(1),rm(2),rm(3))      !*** eq. 2.89, p.37
+|
+|      return
+|      end
+```
+*/
