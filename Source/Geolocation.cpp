@@ -212,7 +212,7 @@ rs<->rsun — sun coordinates: double[3]
 	```
 	t — terrestrial_time
 	*/
-	double terrestrial_time = julian_date.to_TerrestrialTime(initial_modified_julian_date);
+	double terrestrial_time = julian_date.JulianCenturies(initial_modified_julian_date);
 
 	/*
 	solid.f [LN 919–921]
@@ -320,7 +320,7 @@ solid.f [LN 717–728]
 	```
 	t — terrestrial_time
 	*/
-	double terrestrial_time = julian_date.to_TerrestrialTime(initial_modified_julian_date);
+	double terrestrial_time = julian_date.JulianCenturies(initial_modified_julian_date);
 
 	/*
 	solid.f [LN –]

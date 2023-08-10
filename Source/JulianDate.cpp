@@ -105,7 +105,32 @@ fmjd —
 }
 
 
-double JulianDate::to_TerrestrialTime(unsigned int initial_modified_julian_date)
+double JulianDate::JulianCenturies(unsigned int initial_modified_julian_date)
+{
+	/*
+	solid.f [LN 914–918]
+	```
+	|*** julian centuries since 1.5 january 2000 (J2000)
+	|***   (note: also low precision use of mjd --> tjd)
+	|
+	|      tjdtt = mjd+fmjdtt+2400000.5d0              !*** Julian Date, TT
+	|      t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
+	```
+	fmjdtt — FMJD_terrestrial_time
+	tjdtt — julian_date_terrestrial_time
+	t — (julian_date_terrestrial_time - 2451545.0) / 36525.0;
+	*/
+	double FMJD_terrestrial_time = FractionalModifiedJulianDate_TerrestrialTime(initial_modified_julian_date);
+	double terrestrial_time = _modified_julian_date + FMJD_terrestrial_time + 2400000.5;
+	return (terrestrial_time - 2451545.0) / 36525.0;
+}
+
+
+double JulianDate::FractionalModifiedJulianDate_TerrestrialTime(unsigned int initial_modified_julian_date)
+/*
+Gets the fractional part of modified julian date as Terrestrial Time. This is missing the whole number modified julian
+date.
+*/
 {
 	/*
 	solid.f [LN 737–739...741]
@@ -154,23 +179,14 @@ double JulianDate::to_TerrestrialTime(unsigned int initial_modified_julian_date)
 	double time_seconds_TerrestrialTime = time_seconds_TAI + 32.184;
 
 	/*
-	solid.f [LN 911, 914–918]
+	solid.f [LN 911]
 	```
 	|      fmjdtt =tsectt/86400.d0                     !*** TT  time (fract. day)
-
-	|*** julian centuries since 1.5 january 2000 (J2000)
-	|***   (note: also low precision use of mjd --> tjd)
-	|
-	|      tjdtt = mjd+fmjdtt+2400000.5d0              !*** Julian Date, TT
-	|      t     = (tjdtt - 2451545.d0)/36525.d0       !*** julian centuries, TT
-	```
-	t — TerrestrialTime_seconds
+	````
 	fmjdtt — fractional_modified_julian_date_TT
 	*/
-	double fractional_modified_julian_date_TT = time_seconds_TerrestrialTime / 86400.0;
-	double tjdtt = _modified_julian_date + fractional_modified_julian_date_TT + 2400000.5;
-	double TerrestrialTime_seconds = (tjdtt - 2451545.0) / 36525.0;
-	return TerrestrialTime_seconds;
+	double fractional_modified_julian_date_terrestrial_time = time_seconds_TerrestrialTime / 86400.0;
+	return fractional_modified_julian_date_terrestrial_time;
 }
 
 
