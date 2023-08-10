@@ -50,6 +50,7 @@ class Geolocation
 
 		Coordinate<double> sun_coordinates(unsigned int initial_modified_julian_date, JulianDate& julian_date);
 		Coordinate<double> moon_coordinates(unsigned int initial_modified_julian_date, JulianDate& julian_date);
+		Coordinate<double> tidal_displacement();
 
 	private:
 		const double _latitude;  // Radians

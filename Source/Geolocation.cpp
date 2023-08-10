@@ -292,7 +292,7 @@ rs<->rsun — sun coordinates: double[3]
 }
 
 
-Coordinate<double> moon_coordinates(unsigned int initial_modified_julian_date, JulianDate& julian_date)
+Coordinate<double> Geolocation::moon_coordinates(unsigned int initial_modified_julian_date, JulianDate& julian_date)
 /*
 solid.f [LN 717–728]
 ```
@@ -311,7 +311,7 @@ solid.f [LN 717–728]
 ```
 */
 {
-		/*
+	/*
 	solid.f [LN 737...749]
 	```
 	|*** use TT for solar ephemerides
