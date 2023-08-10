@@ -159,7 +159,6 @@ solid.f [LN 42...61]
 	*/
 	for(int minute = 0; minute < 1440 /* minutes in a day */; minute++)
 	{
-		location.sun_coordinates(initial_modified_julian_date, julian_date);
 	}
 }
 

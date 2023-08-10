@@ -6,7 +6,7 @@
 #include "Coordinate.hpp"
 
 
-Coordinate<double> Geolocation::tidal_displacement()
+Coordinate<double> Geolocation::tidal_displacement(unsigned int initial_modified_julian_date, JulianDate& julian_date)
 /*
 solid.f [LN 110–150]
 ```
@@ -54,6 +54,9 @@ solid.f [LN 110–150]
 ```
 */
 {
+	Coordinate<double> solar_coordinates = sun_coordinates(initial_modified_julian_date, julian_date);
+	Coordinate<double> lunar_coordainate = moon_coordinates(initial_modified_julian_date, julian_date);
+
 	/*
 	```
 	|*** nominal second degree and third degree love numbers and shida numbers
@@ -77,14 +80,32 @@ solid.f [LN 110–150]
 	|***** t=(dmjdtt-51545.d0)/36525.d0                !*** days to centuries, TT
 	|      t=(dmjdtt-51544.d0)/36525.d0                !*** days to centuries, TT
 	|      fhr=(dmjdtt-int(dmjdtt))*24.d0              !*** hours in the day, TT
-	|
+	```
+	dmjdtt — terrestrial_time_days
+	t — terrestrial_time_years
+	fhr — terrestrial_time_hours
+	*/
+	double terrestrial_time_days = julian_date.TerrestrialTime(initial_modified_julian_date);
+	double terrestrial_time_years = (terrestrial_time - 51544.0) / 36525.0;
+	double terrestrial_time_hours = (terrestrial_time - (int)terrestrial_time) * 24.0;
+
+	/*
+	```
 	|*** scalar product of station vector with sun/moon vector
 	|
 	|      call sprod(xsta,xsun,scs,rsta,rsun)
 	|      call sprod(xsta,xmon,scm,rsta,rmon)
 	|      scsun=scs/rsta/rsun
 	|      scmon=scm/rsta/rmon
-	|
+	```
+	*/
+	Coordinate<double> geo_coordinate = (Coordinate<double>)*this;
+	double geo_coordinates_sqrt  = sqrt(geo_coordinate * geo_coordinate);
+	double solar_coordinates_sqrt = sqrt(solar_coordinates * solar_coordinates);
+	double solar_scalar = geo_coordinate * solar_coordinates;
+
+	/*
+	```
 	|*** computation of new h2 and l2
 	|
 	|      cosphi=dsqrt(xsta(1)*xsta(1) + xsta(2)*xsta(2))/rsta

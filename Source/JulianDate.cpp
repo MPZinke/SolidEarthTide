@@ -120,13 +120,13 @@ double JulianDate::JulianCenturies(unsigned int initial_modified_julian_date)
 	tjdtt — julian_date_terrestrial_time
 	t — (julian_date_terrestrial_time - 2451545.0) / 36525.0;
 	*/
-	double FMJD_terrestrial_time = FractionalModifiedJulianDate_TerrestrialTime(initial_modified_julian_date);
-	double terrestrial_time = _modified_julian_date + FMJD_terrestrial_time + 2400000.5;
-	return (terrestrial_time - 2451545.0) / 36525.0;
+	double TerrestrialTime = TerrestrialTime(initial_modified_julian_date);
+	double JulianDate_TerrestrialTime = TerrestrialTime + 2400000.5;
+	return (JulianDate_TerrestrialTime - 2451545.0) / 36525.0;
 }
 
 
-double JulianDate::FractionalModifiedJulianDate_TerrestrialTime(unsigned int initial_modified_julian_date)
+double JulianDate::TerrestrialTime(unsigned int initial_modified_julian_date)
 /*
 Gets the fractional part of modified julian date as Terrestrial Time. This is missing the whole number modified julian
 date.
@@ -186,7 +186,7 @@ date.
 	fmjdtt — fractional_modified_julian_date_TT
 	*/
 	double fractional_modified_julian_date_terrestrial_time = time_seconds_TerrestrialTime / 86400.0;
-	return fractional_modified_julian_date_terrestrial_time;
+	return _modified_julian_date + fractional_modified_julian_date_terrestrial_time;
 }
 
 

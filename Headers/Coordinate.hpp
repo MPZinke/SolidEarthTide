@@ -79,6 +79,14 @@ class Coordinate
 			return Coordinate<T>(cos_theta * x + sin_theta * y, cos_theta * y - sin_theta * x, z);
 		}
 
+		T operator*(Coordinate<T>& right)
+		/*
+		Dot product
+		*/
+		{
+			return x * right.x + y * right.y + z * right.z;
+		}
+
 	private:
 		T x;
 		T y;
