@@ -3,7 +3,17 @@
 #pragma once
 
 
+#include <assert.h>
 #include <cmath>
+#include <iostream>
+
+
+enum
+{
+	X,
+	Y,
+	Z
+};
 
 
 template<class T>
@@ -85,6 +95,21 @@ class Coordinate
 		*/
 		{
 			return x * right.x + y * right.y + z * right.z;
+		}
+
+		T operator[](unsigned int index)
+		{
+			switch(index)
+			{
+				case X:
+					return x;
+				case Y:
+					return y;
+				case Z:
+					return z;
+				default:
+					throw std::runtime_error("Index must be 'X', 'Y', 'Z'");
+			}
 		}
 
 	private:

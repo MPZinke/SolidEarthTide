@@ -17,7 +17,7 @@ class JulianDate
 
 		unsigned int modified_julian_date();
 		double JulianCenturies(unsigned int initial_modified_julian_date);
-		double FractionalModifiedJulianDate_TerrestrialTime(unsigned int initial_modified_julian_date);
+		double TerrestrialTime(unsigned int initial_modified_julian_date);
 		double UTC_to_TAI(unsigned int initial_modified_julian_date);
 
 		double GreenwichHourAngleRadians();

@@ -34,77 +34,48 @@ const double Geolocation::COS_OBLIQUITY = cos(OBLIQUITY);
 const double Geolocation::SIN_OBLIQUITY = sin(OBLIQUITY);
 const double Geolocation::OPOD = 282.9400;
 
+
+/*
+solid.f [LN 22–23]
+```
+|      a=6378137.d0
+|      e2=6.69438002290341574957d-03
+```
+a = EQUITORIAL_RADIUS
+e2 = E_SQR
+*/
 const double Geolocation::EQUITORIAL_RADIUS = 6378137.0;
 const double Geolocation::GEODETIC_ELLIPSOID = 6.69438002290341574957e-3;
 
+/*
+solid.f [LN 160—162]
+```
+|*** nominal second degree and third degree love numbers and shida numbers
+|
+|      data h20/0.6078d0/,l20/0.0847d0/,h3/0.292d0/,l3/0.015d0/
+```
+h20 — SECOND_DEGREE_LOVE
+l20 — SECOND_DEGREE_SHIDA
+h3 — THIRD_DEGREE_LOVE
+l3 — THIRD_DEGREE_SHIDA
+
+https://www.eas.slu.edu/GGP/BIM_Recent_Issues/bim145-2009/spicakova_etal_deg2_Love-Shida_VLBI_bim145_09.pdf
+*/
+const double Geolocation::SECOND_DEGREE_LOVE = 0.6078;  // h20/0.6078d0/
+const double Geolocation::SECOND_DEGREE_SHIDA = 0.0847;  // l20/0.0847d0/
+const double Geolocation::THIRD_DEGREE_LOVE = 0.292;  // h3/0.292d0/
+const double Geolocation::THIRD_DEGREE_SHIDA = 0.015;  // l3/0.015d0/
+
 
 Geolocation::Geolocation(double latitude_degrees, double longitude_degrees)
-	/*
-	solid.f [LN 55–56]
-	|      gla0=glad/rad
-	|      glo0=glod/rad
-	*/
+/*
+solid.f [LN 55–56]
+|      gla0=glad/rad
+|      glo0=glod/rad
+*/
 : _latitude{latitude_degrees / static_cast<double>(RADIAN)},
   _longitude{longitude_degrees / static_cast<double>(RADIAN)}
 {}
-
-
-// void operator<<(double cartesian_coordinates[3], Geolocation& geolocation)
-// /*
-// solid.f [LN 57–61]
-// ```
-// |      eht0=0.d0
-// |      call geoxyz(gla0,glo0,eht0,x0,y0,z0)
-// |      xsta(1)=x0
-// |      xsta(2)=y0
-// |      xsta(3)=z0
-// ```
-// */
-// {
-// 	/*
-// 	solid.f [LN 974–980]
-// 	```
-// 	|      common/comgrs/a,e2
-// 	|
-// 	|      sla=dsin(gla)
-// 	|      cla=dcos(gla)
-// 	|      w2=1.d0-e2*sla*sla
-// 	|      w=dsqrt(w2)
-// 	|      en=a/w
-// 	```
-// 	en — prime_vertical_radius
-// 	*/
-// 	double sin_latitude = 0;
-// 	double cos_latitude = 0;
-// 	double w_squared = 1.0 - Geolocation::GEODETIC_ELLIPSOID * sin_latitude * sin_latitude;
-// 	double w = pow(w_squared, 0.5);
-// 	double prime_vertical_radius = Geolocation::EQUITORIAL_RADIUS / w;
-
-// 	/*
-// 	solid.f [LN 57]
-// 	```
-// 	|      eht0=0.d0
-// 	```
-// 	eht0 <=> eht — Altitude
-// 	*/
-// 	const double altitude = 0.0;
-
-// 	/*
-// 	solid.f [LN 974...982–984]
-// 	```
-// 	|      common/comgrs/a,e2
-// 	⋮
-// 	|      x=(en+eht)*cla*dcos(glo)
-// 	|      y=(en+eht)*cla*dsin(glo)
-// 	|      z=(en*(1.d0-e2)+eht)*sla
-// 	```
-// 	e2 — GEODETIC_ELLIPSOID
-
-// 	*/
-// 	cartesian_coordinates[X] = (prime_vertical_radius+altitude) * cos_latitude * cos(geolocation._longitude * Geolocation::RADIAN);
-// 	cartesian_coordinates[Y] = (prime_vertical_radius+altitude) * cos_latitude * sin(geolocation._longitude * Geolocation::RADIAN);
-// 	cartesian_coordinates[Z] = (prime_vertical_radius*(1.0-Geolocation::GEODETIC_ELLIPSOID) + altitude) * sin_latitude;
-// }
 
 
 Geolocation::operator Coordinate<double>()
@@ -160,9 +131,9 @@ solid.f [LN 57–61]
 
 	*/
 	return Coordinate<double>(
-	  /* X = */(prime_vertical_radius+altitude) * cos_latitude * cos(this -> _longitude * (double)Geolocation::RADIAN),
-	  /* Y = */(prime_vertical_radius+altitude) * cos_latitude * sin(this -> _longitude * (double)Geolocation::RADIAN),
-	  /* Z = */(prime_vertical_radius*(1.0-Geolocation::GEODETIC_ELLIPSOID) + altitude) * sin_latitude
+	  /* X = */(prime_vertical_radius+altitude) * cos_latitude * cos(this -> _longitude * static_cast<double>(RADIAN)),
+	  /* Y = */(prime_vertical_radius+altitude) * cos_latitude * sin(this -> _longitude * static_cast<double>(RADIAN)),
+	  /* Z = */(prime_vertical_radius*(1.0-GEODETIC_ELLIPSOID) + altitude) * sin_latitude
 	);
 }
 
@@ -226,7 +197,7 @@ rs<->rsun — sun coordinates: double[3]
 	em2 — 
 	*/
 	double solar_ephemerides_degrees = 357.5256 + 35999.049 * terrestrial_time;
-	double solar_ephemerides = solar_ephemerides_degrees / Geolocation::RADIAN;
+	double solar_ephemerides = solar_ephemerides_degrees / RADIAN;
 
 	/*
 	solid.f [LN 923–930]
@@ -245,7 +216,7 @@ rs<->rsun — sun coordinates: double[3]
 	*/
 	double radius = (149.619 - 2.499 * cos(solar_ephemerides) - 0.021 * cos(solar_ephemerides * 2)) * 1000000000;
 	double solar_longitude_degrees = (6892.0 * sin(solar_ephemerides) + 72.0 * sin(solar_ephemerides * 2)) / 3600.0 
-	  + Geolocation::OPOD + solar_ephemerides_degrees + 1.3972 * terrestrial_time;
+	  + OPOD + solar_ephemerides_degrees + 1.3972 * terrestrial_time;
 
 	/*
 	solid.f [LN 932–941]
@@ -268,14 +239,14 @@ rs<->rsun — sun coordinates: double[3]
 	rs2 — radius_solar_coordinates_Y
 	rs3 — radius_solar_coordinates_Z
 	*/
-	double solar_longitude = solar_longitude_degrees / Geolocation::RADIAN;
+	double solar_longitude = solar_longitude_degrees / RADIAN;
 	double cos_solar_longitude = cos(solar_longitude);
 	double sin_solar_longitude = sin(solar_longitude);
 
 	Coordinate<double> radius_solar_coordinates(
 		radius * cos_solar_longitude,
-		radius * sin_solar_longitude * Geolocation::COS_OBLIQUITY,
-		radius * sin_solar_longitude * Geolocation::SIN_OBLIQUITY
+		radius * sin_solar_longitude * COS_OBLIQUITY,
+		radius * sin_solar_longitude * SIN_OBLIQUITY
 	);
 
 	/*
@@ -383,20 +354,20 @@ solid.f [LN 717–728]
 		  148.0 / 3600.0,  -125.0 / 3600.0,  -110.0 / 3600.0,    -55.0 / 3600.0
 	};
 	double solar_ecliptic_longitude_degrees = mean_lunar_longitude
-		+ factors1[0]  * sin(mean_lunar_anomaly / Geolocation::RADIAN)
-		+ factors1[1]  * sin(mean_lunar_anomaly * 2 / Geolocation::RADIAN)
-		+ factors1[2]  * sin((mean_lunar_anomaly - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors1[3]  * sin(mean_lunar_and_solar_difference * 2 / Geolocation::RADIAN)
-		+ factors1[4]  * sin(mean_solar_anomaly / Geolocation::RADIAN)
-		+ factors1[5]  * sin(mean_lunar_angular_distance * 2 / Geolocation::RADIAN)
-		+ factors1[6]  * sin((mean_lunar_anomaly * 2 - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors1[7]  * sin((mean_lunar_and_solar_anomaly - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors1[8]  * sin((mean_lunar_anomaly + mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors1[9]  * sin((mean_solar_anomaly - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors1[10] * sin((mean_lunar_anomaly - mean_solar_anomaly) / Geolocation::RADIAN)
-		+ factors1[11] * sin(mean_lunar_and_solar_difference / Geolocation::RADIAN)
-		+ factors1[12] * sin((mean_lunar_and_solar_anomaly) / Geolocation::RADIAN)
-		+ factors1[13] * sin(((mean_lunar_angular_distance * 2) - (mean_lunar_and_solar_difference * 2)) / Geolocation::RADIAN);
+		+ factors1[0]  * sin(mean_lunar_anomaly / RADIAN)
+		+ factors1[1]  * sin(mean_lunar_anomaly * 2 / RADIAN)
+		+ factors1[2]  * sin((mean_lunar_anomaly - mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors1[3]  * sin(mean_lunar_and_solar_difference * 2 / RADIAN)
+		+ factors1[4]  * sin(mean_solar_anomaly / RADIAN)
+		+ factors1[5]  * sin(mean_lunar_angular_distance * 2 / RADIAN)
+		+ factors1[6]  * sin((mean_lunar_anomaly * 2 - mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors1[7]  * sin((mean_lunar_and_solar_anomaly - mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors1[8]  * sin((mean_lunar_anomaly + mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors1[9]  * sin((mean_solar_anomaly - mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors1[10] * sin((mean_lunar_anomaly - mean_solar_anomaly) / RADIAN)
+		+ factors1[11] * sin(mean_lunar_and_solar_difference / RADIAN)
+		+ factors1[12] * sin((mean_lunar_and_solar_anomaly) / RADIAN)
+		+ factors1[13] * sin(((mean_lunar_angular_distance * 2) - (mean_lunar_and_solar_difference * 2)) / RADIAN);
 
 
 	/*
@@ -421,22 +392,22 @@ solid.f [LN 717–728]
 	selatd — solar_ecliptic_latitude_degrees
 	*/
 
-	double temp = 412.0 / 3600.0 * sin(mean_lunar_angular_distance * 2 / Geolocation::RADIAN)
-		+ 541.0 / 3600.0 * sin(mean_solar_anomaly / Geolocation::RADIAN);
+	double temp = 412.0 / 3600.0 * sin(mean_lunar_angular_distance * 2 / RADIAN)
+		+ 541.0 / 3600.0 * sin(mean_solar_anomaly / RADIAN);
 
 	double factors2[8] = {
 		18520.0 / 3600.0,  526.0 / 3600.0,  44.0 / 3600.0,  -31.0 / 3600.0,
 		  -25.0 / 3600.0,  -23.0 / 3600.0,  21.0 / 3600.0,   11.0 / 3600.0
 	};
 	double solar_ecliptic_latitude_degrees =
-		factors2[0]   * sin((mean_lunar_angular_distance + solar_ecliptic_longitude_degrees - mean_lunar_longitude + temp) / Geolocation::RADIAN)
-		+ factors2[1] * sin((mean_lunar_angular_distance - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors2[2] * sin((mean_lunar_anomaly + mean_lunar_angular_distance - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors2[3] * sin((mean_lunar_distance_minus_anomaly - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors2[4] * sin((-mean_lunar_anomaly + mean_lunar_distance_minus_anomaly) / Geolocation::RADIAN)
-		+ factors2[5] * sin((mean_solar_anomaly + mean_lunar_angular_distance - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors2[6] * sin((mean_lunar_distance_minus_anomaly) / Geolocation::RADIAN)
-		+ factors2[7] * sin((-mean_solar_anomaly + mean_lunar_angular_distance - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN);
+		factors2[0]   * sin((mean_lunar_angular_distance + solar_ecliptic_longitude_degrees - mean_lunar_longitude + temp) / RADIAN)
+		+ factors2[1] * sin((mean_lunar_angular_distance - mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors2[2] * sin((mean_lunar_anomaly + mean_lunar_angular_distance - mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors2[3] * sin((mean_lunar_distance_minus_anomaly - mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors2[4] * sin((-mean_lunar_anomaly + mean_lunar_distance_minus_anomaly) / RADIAN)
+		+ factors2[5] * sin((mean_solar_anomaly + mean_lunar_angular_distance - mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors2[6] * sin((mean_lunar_distance_minus_anomaly) / RADIAN)
+		+ factors2[7] * sin((-mean_solar_anomaly + mean_lunar_angular_distance - mean_lunar_and_solar_difference * 2) / RADIAN);
 
 	/*
 	solid.f [LN 798–808]
@@ -463,14 +434,14 @@ solid.f [LN 717–728]
 		385000000.0, -20905000.0, -3699000.0, -2956000.0, -570000.0, 246000.0, -205000.0, -171000.0, -152000.0
 	};
 	double lunar_distance = factors3[0]
-		+ factors3[1] * cos(mean_lunar_anomaly / Geolocation::RADIAN)
-		+ factors3[2] * cos((mean_lunar_and_solar_difference * 2 - mean_lunar_anomaly) / Geolocation::RADIAN)
-		+ factors3[3] * cos(mean_lunar_and_solar_difference * 2 / Geolocation::RADIAN)
-		+ factors3[4] * cos(mean_lunar_anomaly * 2 / Geolocation::RADIAN)
-		+ factors3[5] * cos((mean_lunar_anomaly * 2 - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors3[6] * cos((mean_solar_anomaly - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors3[7] * cos((mean_lunar_anomaly + mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN)
-		+ factors3[8] * cos((mean_lunar_and_solar_anomaly - mean_lunar_and_solar_difference * 2) / Geolocation::RADIAN);
+		+ factors3[1] * cos(mean_lunar_anomaly / RADIAN)
+		+ factors3[2] * cos((mean_lunar_and_solar_difference * 2 - mean_lunar_anomaly) / RADIAN)
+		+ factors3[3] * cos(mean_lunar_and_solar_difference * 2 / RADIAN)
+		+ factors3[4] * cos(mean_lunar_anomaly * 2 / RADIAN)
+		+ factors3[5] * cos((mean_lunar_anomaly * 2 - mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors3[6] * cos((mean_solar_anomaly - mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors3[7] * cos((mean_lunar_anomaly + mean_lunar_and_solar_difference * 2) / RADIAN)
+		+ factors3[8] * cos((mean_lunar_and_solar_anomaly - mean_lunar_and_solar_difference * 2) / RADIAN);
 
 	/*
 	solid.f [LN 810–814]
@@ -510,12 +481,12 @@ solid.f [LN 717–728]
 	t2  — temp2
 	t3  — temp3
 	*/
-	double obliquity_ecliptic_radians = 23.43929111 / Geolocation::RADIAN;
+	double obliquity_ecliptic_radians = 23.43929111 / RADIAN;
 
-	double sin_solar_ecliptic_latitude = sin(solar_ecliptic_latitude_degrees / Geolocation::RADIAN);
-	double cos_solar_ecliptic_latitude = cos(solar_ecliptic_latitude_degrees / Geolocation::RADIAN);
-	double sin_solar_ecliptic_longitude = sin(solar_ecliptic_longitude_degrees / Geolocation::RADIAN);
-	double cos_solar_ecliptic_longitude = cos(solar_ecliptic_longitude_degrees / Geolocation::RADIAN);
+	double sin_solar_ecliptic_latitude = sin(solar_ecliptic_latitude_degrees / RADIAN);
+	double cos_solar_ecliptic_latitude = cos(solar_ecliptic_latitude_degrees / RADIAN);
+	double sin_solar_ecliptic_longitude = sin(solar_ecliptic_longitude_degrees / RADIAN);
+	double cos_solar_ecliptic_longitude = cos(solar_ecliptic_longitude_degrees / RADIAN);
 
 	double x = lunar_distance * cos_solar_ecliptic_longitude * cos_solar_ecliptic_latitude;
 	double y = lunar_distance * sin_solar_ecliptic_longitude * cos_solar_ecliptic_latitude;

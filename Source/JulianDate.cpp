@@ -120,8 +120,8 @@ double JulianDate::JulianCenturies(unsigned int initial_modified_julian_date)
 	tjdtt — julian_date_terrestrial_time
 	t — (julian_date_terrestrial_time - 2451545.0) / 36525.0;
 	*/
-	double TerrestrialTime = TerrestrialTime(initial_modified_julian_date);
-	double JulianDate_TerrestrialTime = TerrestrialTime + 2400000.5;
+	double terrestrial_time = TerrestrialTime(initial_modified_julian_date);
+	double JulianDate_TerrestrialTime = terrestrial_time + 2400000.5;
 	return (JulianDate_TerrestrialTime - 2451545.0) / 36525.0;
 }
 

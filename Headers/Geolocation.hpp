@@ -16,8 +16,8 @@ class Geolocation
 		/*
 		solid.f [LN 22–23]
 		```
-		      a=6378137.d0
-		      e2=6.69438002290341574957d-03
+		|      a=6378137.d0
+		|      e2=6.69438002290341574957d-03
 		```
 		a = EQUITORIAL_RADIUS
 		e2 = E_SQR
@@ -43,6 +43,26 @@ class Geolocation
 		static const double COS_OBLIQUITY;  // 0.999974510191339: cos(obliquity of the J2000 ecliptic)
 		static const double SIN_OBLIQUITY;  // 0.00713995571357085: sin(obliquity of the J2000 ecliptic)
 		static const double OPOD;  // 282.9400: RAAN + arg.peri. (deg.)
+
+		/*
+		solid.f [LN 160—162]
+		```
+		|*** nominal second degree and third degree love numbers and shida numbers
+		|
+		|      data h20/0.6078d0/,l20/0.0847d0/,h3/0.292d0/,l3/0.015d0/
+		```
+		h20 — SECOND_DEGREE_LOVE
+		l20 — SECOND_DEGREE_SHIDA
+		h3 — THIRD_DEGREE_LOVE
+		l3 — THIRD_DEGREE_SHIDA
+
+		https://www.eas.slu.edu/GGP/BIM_Recent_Issues/bim145-2009/spicakova_etal_deg2_Love-Shida_VLBI_bim145_09.pdf
+		*/
+		static const double SECOND_DEGREE_LOVE;  // 0.6078: h20/0.6078d0/
+		static const double SECOND_DEGREE_SHIDA;  // 0.0847: l20/0.0847d0/
+		static const double THIRD_DEGREE_LOVE;  // 0.292: h3/0.292d0/
+		static const double THIRD_DEGREE_SHIDA;  // 0.015: l3/0.015d0/
+
 
 		Geolocation(double latitude_degrees, double longitude_degrees);
 		// friend void operator<<(double cartesian_coordinates[3], Geolocation& geolocation);

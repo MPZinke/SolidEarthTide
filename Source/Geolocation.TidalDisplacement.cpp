@@ -4,6 +4,7 @@
 
 
 #include "Coordinate.hpp"
+#include "JulianDate.hpp"
 
 
 Coordinate<double> Geolocation::tidal_displacement(unsigned int initial_modified_julian_date, JulianDate& julian_date)
@@ -54,9 +55,6 @@ solid.f [LN 110–150]
 ```
 */
 {
-	Coordinate<double> solar_coordinates = sun_coordinates(initial_modified_julian_date, julian_date);
-	Coordinate<double> lunar_coordainate = moon_coordinates(initial_modified_julian_date, julian_date);
-
 	/*
 	```
 	|*** nominal second degree and third degree love numbers and shida numbers
@@ -86,8 +84,8 @@ solid.f [LN 110–150]
 	fhr — terrestrial_time_hours
 	*/
 	double terrestrial_time_days = julian_date.TerrestrialTime(initial_modified_julian_date);
-	double terrestrial_time_years = (terrestrial_time - 51544.0) / 36525.0;
-	double terrestrial_time_hours = (terrestrial_time - (int)terrestrial_time) * 24.0;
+	double terrestrial_time_years = (terrestrial_time_days - 51544.0) / 36525.0;
+	double terrestrial_time_hours = (terrestrial_time_days - (int)terrestrial_time_days) * 24.0;
 
 	/*
 	```
@@ -98,11 +96,28 @@ solid.f [LN 110–150]
 	|      scsun=scs/rsta/rsun
 	|      scmon=scm/rsta/rmon
 	```
+	xsta — geo_coordinate
+	xsun — solar_coordinate
+	scs — solar_scalar
+	rsta — geo_distance
+	rsun — solar_distance
+	rmon — lunar_distance
+	scsun — solar_sc
+	scmon — lunar_sc
 	*/
 	Coordinate<double> geo_coordinate = (Coordinate<double>)*this;
-	double geo_coordinates_sqrt  = sqrt(geo_coordinate * geo_coordinate);
-	double solar_coordinates_sqrt = sqrt(solar_coordinates * solar_coordinates);
-	double solar_scalar = geo_coordinate * solar_coordinates;
+	Coordinate<double> solar_coordinate = sun_coordinates(initial_modified_julian_date, julian_date);
+	Coordinate<double> lunar_coordinate = moon_coordinates(initial_modified_julian_date, julian_date);
+
+	double geo_distance  = sqrt(geo_coordinate * geo_coordinate);
+	double solar_distance = sqrt(solar_coordinate * solar_coordinate);
+	double lunar_distance = sqrt(lunar_coordinate * lunar_coordinate);
+
+	double solar_scalar = geo_coordinate * solar_coordinate;
+	double lunar_scalar = geo_coordinate * lunar_coordinate;
+
+	double solar_sc = solar_scalar / geo_distance / solar_distance;
+	double lunar_sc = lunar_scalar / geo_distance / lunar_distance;
 
 	/*
 	```
@@ -121,7 +136,29 @@ solid.f [LN 110–150]
 	|
 	|      p3sun=5.d0/2.d0*(h3-3.d0*l3)*scsun**3+3.d0/2.d0*(l3-h3)*scsun
 	|      p3mon=5.d0/2.d0*(h3-3.d0*l3)*scmon**3+3.d0/2.d0*(l3-h3)*scmon
-	|
+	```
+	cosphi — cos_ϕ
+	h2 — second_degree_love
+	l2 — second_degree_shida
+	p2sun — solar_p2
+	p2mon — lunar_p2
+	p3sun — solar_p3
+	p3mon — lunar_p3
+	*/
+	double cos_ϕ = sqrt(geo_coordinate[Y] * geo_coordinate[Y] + geo_coordinate[Z] * geo_coordinate[Z]) / geo_distance;
+	double second_degree_love = SECOND_DEGREE_LOVE - 0.0006 * (1.0 - 3.0 / 2.0 * cos_ϕ * cos_ϕ);
+	double second_degree_shida = SECOND_DEGREE_SHIDA + 0.0002 * (1.0 - 3.0 / 2.0 * cos_ϕ * cos_ϕ);
+
+	double p2 = 3.0 * (second_degree_love / 2.0 - second_degree_shida);
+	double solar_p2 = p2 * solar_sc * solar_sc - second_degree_love / 2.0;
+	double lunar_p2 = p2 * solar_sc * lunar_sc - second_degree_love / 2.0;
+
+	double p3_pre_op = 2.5 * (THIRD_DEGREE_LOVE - 3.0 * THIRD_DEGREE_SHIDA);
+	double solar_p3 = p3_pre_op * pow(solar_sc, 3) + 1.5 * THIRD_DEGREE_SHIDA - THIRD_DEGREE_LOVE * solar_sc;
+	double lunar_p3 = p3_pre_op * pow(lunar_sc, 3) + 1.5 * THIRD_DEGREE_SHIDA - THIRD_DEGREE_LOVE * lunar_sc;
+
+	/*
+	```
 	|*** term in direction of sun/moon vector
 	|
 	|      x2sun=3.d0*l2*scsun
