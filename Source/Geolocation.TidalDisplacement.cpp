@@ -245,9 +245,9 @@ lflag —
 	|      dxtide(3)=dxtide(3)+xcorsta(3)
 	```
 	*/
-	Coordinate<double> corrected_geo_coordinate = mantle_inelasticity_diurnal_band_correction(geo_coordinate,
+	Coordinate<double> corrected_geo_coordinate_1st = mantle_inelasticity_1st_diurnal_band_correction(geo_coordinate,
 		solar_coordinate, lunar_coordinate, solar_factor2, lunar_factor2);
-	detide += corrected_geo_coordinate;
+	detide += corrected_geo_coordinate_1st;
 
 	/*
 	```
@@ -259,6 +259,9 @@ lflag —
 	|      dxtide(3)=dxtide(3)+xcorsta(3)
 	```
 	*/
+	Coordinate<double> corrected_geo_coordinate_semi = mantle_inelasticity_semi_diurnal_band_correction(geo_coordinate,
+		solar_coordinate, lunar_coordinate, solar_factor2, lunar_factor2);
+	detide += corrected_geo_coordinate_semi;
 
 	/*
 	```
@@ -329,7 +332,7 @@ lflag —
 }
 
 
-Coordinate<double> mantle_inelasticity_diurnal_band_correction(Coordinate<double> geo_coordinate, 
+Coordinate<double> Geolocation::mantle_inelasticity_1st_diurnal_band_correction(Coordinate<double> geo_coordinate, 
 	Coordinate<double> solar_coordinate, Coordinate<double> lunar_coordinate, double solar_factor2, double lunar_factor2 
 )
 /*
@@ -426,7 +429,9 @@ xcorsta — [returned]
 }
 
 
-Coordinate<double> 
+Coordinate<double> Geolocation::mantle_inelasticity_semi_diurnal_band_correction(Coordinate<double> geo_coordinate, 
+	Coordinate<double> solar_coordinate, Coordinate<double> lunar_coordinate, double solar_factor2, double lunar_factor2 
+)
 /*
 ```
 |      subroutine st1isem(xsta,xsun,xmon,fac2sun,fac2mon,xcorsta)
@@ -440,11 +445,8 @@ Coordinate<double>
 */
 {
 	/*
+	solid.f [LN 643–651]
 	```
-	|      implicit double precision (a-h,o-z)
-	|      dimension xsta(3),xsun(3),xmon(3),xcorsta(3)
-	|      data dhi/-0.0022d0/,dli/-0.0007d0/
-	|
 	|      rsta=enorm8(xsta)
 	|      sinphi=xsta(3)/rsta
 	|      cosphi=dsqrt(xsta(1)**2+xsta(2)**2)/rsta
@@ -454,6 +456,30 @@ Coordinate<double>
 	|      sintwola=2.d0*cosla*sinla
 	|      rmon=enorm8(xmon)
 	|      rsun=enorm8(xsun)
+	```
+	rsta — geo_distance
+	sinphi — sin_ϕ
+	cosphi — cos_ϕ
+	sinla — sin_latitude
+	cosla — cos_latitude
+	costwola — cos_squared_latitude
+	sintwola — sin_squared_latitude
+	rmon — lunar_distance
+	rsun — solar_distance
+	*/
+	double geo_distance = geo_coordinate.distance();
+	double sin_ϕ = geo_coordinate[Z] / geo_distance;
+	double cos_ϕ = sqrt(pow(geo_coordinate[X], 2) + pow(geo_coordinate[Y], 2)) / geo_distance;
+	double sin_latitude = geo_coordinate[Y] / cos_ϕ / geo_distance;
+	double cos_latitude = geo_coordinate[X] / cos_ϕ / geo_distance;
+	double cos_squared_latitude = pow(cos_ϕ, 2) - pow(sin_ϕ, 2);
+	double sin_squared_latitude = 2.0 * cos_latitude * sin_latitude;
+	double lunar_distance = lunar_coordinate.distance();
+	double solar_distance = solar_coordinate.distance();
+
+	/*
+	solid.f [LN 652–]
+	```
 	|      drsun=-3.d0/4.d0*dhi*cosphi**2*fac2sun*((xsun(1)**2-xsun(2)**2)*
 	|     * sintwola-2.*xsun(1)*xsun(2)*costwola)/rsun**2
 	|      drmon=-3.d0/4.d0*dhi*cosphi**2*fac2mon*((xmon(1)**2-xmon(2)**2)*
@@ -472,9 +498,39 @@ Coordinate<double>
 	|      xcorsta(1)=dr*cosla*cosphi-de*sinla-dn*sinphi*cosla
 	|      xcorsta(2)=dr*sinla*cosphi+de*cosla-dn*sinphi*sinla
 	|      xcorsta(3)=dr*sinphi+dn*cosphi
-	|
-	|      return
-	|      end
 	```
 	*/
+	double solar_dr = -3.0 / 4.0 * -0.0022 * pow(cos_ϕ, 2) * solar_factor2
+		* ((pow(solar_coordinate[X], 2) - pow(solar_coordinate[Y], 2))
+			* sin_squared_latitude-2.0 * solar_coordinate[X] * solar_coordinate[Y] * cos_squared_latitude)
+			/ pow(solar_distance, 2);
+	double lunar_dr = -3.0 / 4.0 * -0.0022 * pow(cos_ϕ, 2) * lunar_factor2
+		* ((pow(lunar_coordinate[X], 2) - pow(lunar_coordinate[Y], 2))
+			* sin_squared_latitude-2.0 * lunar_coordinate[X] * lunar_coordinate[Y] * cos_squared_latitude)
+			/ pow(lunar_distance, 2);
+	double solar_dn = 1.5 * -0.0007 * sin_ϕ * cos_ϕ * solar_factor2
+		* ((pow(solar_coordinate[X], 2) - pow(solar_coordinate[Y], 2))
+			* sin_squared_latitude-2.0 * solar_coordinate[X] * solar_coordinate[Y] * cos_squared_latitude)
+			/ pow(solar_distance, 2);
+	double lunar_dn = 1.5 * -0.0007 * sin_ϕ * cos_ϕ * lunar_factor2
+		* ((pow(lunar_coordinate[X], 2) - pow(lunar_coordinate[Y], 2))
+			* sin_squared_latitude-2.0 * lunar_coordinate[X] * lunar_coordinate[Y] * cos_squared_latitude)
+			/ pow(lunar_distance, 2);
+	double solar_de = -3.0 / 2.0 * -0.0007 * cos_ϕ * solar_factor2
+		* ((pow(solar_coordinate[X], 2) - pow(solar_coordinate[Y], 2))
+			* cos_squared_latitude+2.0 * solar_coordinate[X] * solar_coordinate[Y] * sin_squared_latitude)
+			/ pow(solar_distance, 2);
+	double lunar_de = -3.0 / 2.0 * -0.0007 * cos_ϕ * lunar_factor2
+		* ((pow(lunar_coordinate[X], 2) - pow(lunar_coordinate[Y], 2))
+			* cos_squared_latitude+2.0 * lunar_coordinate[X] * lunar_coordinate[Y] * sin_squared_latitude)
+			/ pow(lunar_distance, 2);
+
+	double dr = solar_dr + lunar_dr;
+	double dn = solar_dn + lunar_dn;
+	double de = solar_de + lunar_de;
+	return Coordinate<double>(
+		dr * cos_latitude * cos_ϕ - de * sin_latitude - dn * sin_ϕ * cos_latitude,
+		dr * sin_latitude * cos_ϕ + de * cos_latitude - dn * sin_ϕ * sin_latitude,
+		dr * sin_ϕ + dn * cos_ϕ
+	);
 }

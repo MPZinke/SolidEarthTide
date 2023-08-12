@@ -83,7 +83,11 @@ class Geolocation
 		Coordinate<double> moon_coordinates(unsigned int initial_modified_julian_date, JulianDate& julian_date);
 		Coordinate<double> tidal_displacement(unsigned int initial_modified_julian_date, JulianDate& julian_date);
 
-		Coordinate<double> mantle_inelasticity_diurnal_band_correction(Coordinate<double> geo_coordinate, 
+		Coordinate<double> mantle_inelasticity_1st_diurnal_band_correction(Coordinate<double> geo_coordinate, 
+			Coordinate<double> solar_coordinate, Coordinate<double> lunar_coordinate, double solar_factor2,
+			double lunar_factor2 
+		);
+		Coordinate<double> mantle_inelasticity_semi_diurnal_band_correction(Coordinate<double> geo_coordinate, 
 			Coordinate<double> solar_coordinate, Coordinate<double> lunar_coordinate, double solar_factor2,
 			double lunar_factor2 
 		);
