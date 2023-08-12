@@ -66,6 +66,17 @@ const double Geolocation::SECOND_DEGREE_SHIDA = 0.0847;  // l20/0.0847d0/
 const double Geolocation::THIRD_DEGREE_LOVE = 0.292;  // h3/0.292d0/
 const double Geolocation::THIRD_DEGREE_SHIDA = 0.015;  // l3/0.015d0/
 
+/*
+solid.f [LN 214–216]
+```
+|      mass_ratio_sun=332945.943062d0
+|      mass_ratio_moon=0.012300034d0
+|      re =6378136.55d0
+```
+*/
+const double Geolocation::SOLAR_MASS_RATIO = 332945.943062;  // mass_ratio_sun=332945.943062d0
+const double Geolocation::LUNAR_MASS_RATIO = 0.012300034;  // mass_ratio_moon=0.012300034d0
+const double Geolocation::RE = 6378136.55;  // re=6378136.55d0
 
 Geolocation::Geolocation(double latitude_degrees, double longitude_degrees)
 /*

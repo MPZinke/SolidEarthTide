@@ -53,6 +53,13 @@ solid.f [LN 110–150]
 |*** applied by Dennis Milbert 2007may05
 |*** UTC version by Dennis Milbert 2018june01
 ```
+xsta — geo_coordinate
+mjd — julian_date
+fmjd — julian_date
+xsun — solar_coordinate
+xmon — lunar_coordinate
+dxtide — 
+lflag — 
 */
 {
 	/*
@@ -149,9 +156,9 @@ solid.f [LN 110–150]
 	double second_degree_love = SECOND_DEGREE_LOVE - 0.0006 * (1.0 - 3.0 / 2.0 * cos_ϕ * cos_ϕ);
 	double second_degree_shida = SECOND_DEGREE_SHIDA + 0.0002 * (1.0 - 3.0 / 2.0 * cos_ϕ * cos_ϕ);
 
-	double p2 = 3.0 * (second_degree_love / 2.0 - second_degree_shida);
-	double solar_p2 = p2 * solar_sc * solar_sc - second_degree_love / 2.0;
-	double lunar_p2 = p2 * solar_sc * lunar_sc - second_degree_love / 2.0;
+	double p2_pre_op = 3.0 * (second_degree_love / 2.0 - second_degree_shida);
+	double solar_p2 = p2_pre_op * pow(solar_sc, 2) - second_degree_love / 2.0;
+	double lunar_p2 = p2_pre_op * pow(lunar_sc, 2) - second_degree_love / 2.0;
 
 	double p3_pre_op = 2.5 * (THIRD_DEGREE_LOVE - 3.0 * THIRD_DEGREE_SHIDA);
 	double solar_p3 = p3_pre_op * pow(solar_sc, 3) + 1.5 * THIRD_DEGREE_SHIDA - THIRD_DEGREE_LOVE * solar_sc;
@@ -165,7 +172,19 @@ solid.f [LN 110–150]
 	|      x2mon=3.d0*l2*scmon
 	|      x3sun=3.d0*l3/2.d0*(5.d0*scsun*scsun-1.d0)
 	|      x3mon=3.d0*l3/2.d0*(5.d0*scmon*scmon-1.d0)
-	|
+	```
+	x2sun — solar_direction2
+	x2mon — lunar_direction2
+	x3sun — solar_direction3
+	x3mon — lunar_direction3
+	*/
+	double solar_direction2 = 3.0 * second_degree_shida * solar_sc;
+	double lunar_direction2 = 3.0 * second_degree_shida * lunar_sc;
+	double solar_direction3 = 3.0 * THIRD_DEGREE_SHIDA / 2.0 * (5.0 * pow(solar_sc, 2) - 1.0);
+	double lunar_direction3 = 3.0 * THIRD_DEGREE_SHIDA / 2.0 * (5.0 * pow(lunar_sc, 2) - 1.0);
+
+	/*
+	```
 	|*** factors for sun/moon
 	|
 	|      mass_ratio_sun=332945.943062d0
@@ -175,7 +194,19 @@ solid.f [LN 110–150]
 	|      fac2mon=mass_ratio_moon*re*(re/rmon)**3
 	|      fac3sun=fac2sun*(re/rsun)
 	|      fac3mon=fac2mon*(re/rmon)
-	|
+	```
+	fac2sun — solar_factor2
+	fac2mon — lunar_factor2
+	fac3sun — solar_factor3
+	fac3mon — lunar_factor3
+	*/
+	double solar_factor2 = SOLAR_MASS_RATIO * RE * pow(RE / solar_distance, 3);
+	double lunar_factor2 = LUNAR_MASS_RATIO * RE * pow(RE / lunar_distance, 3);
+	double solar_factor3 = solar_factor2 * RE / solar_distance;
+	double lunar_factor3 = lunar_factor2 * RE / lunar_distance;
+
+	/*
+	```
 	|*** total displacement
 	|
 	|      do i=1,3
@@ -185,7 +216,24 @@ solid.f [LN 110–150]
 	|     *            fac3mon*( x3mon*xmon(i)/rmon + p3mon*xsta(i)/rsta )
 	|      enddo
 	|      call zero_vec8(xcorsta)
-	|
+	```
+	*/
+	Coordinate<double> detide;
+	for(unsigned int index = 0; index < 3; index++)
+	{
+		detide[index] =
+			solar_factor2 * (solar_direction2 * solar_coordinate[index] / solar_distance
+				+ solar_p2 * geo_coordinate[index] / geo_distance)
+			+ lunar_factor2 * (lunar_direction2 * lunar_coordinate[index] / lunar_distance
+				+ lunar_p2 * geo_coordinate[index] / geo_distance)
+			+ solar_factor3 * (solar_direction3 * solar_coordinate[index] / solar_distance
+				+ solar_p3 * geo_coordinate[index] / geo_distance)
+			+ lunar_factor3 * (lunar_direction3 * lunar_coordinate[index] / lunar_distance
+				+ lunar_p3 * geo_coordinate[index] / geo_distance);
+	}
+
+	/*
+	```
 	|*** corrections for the out-of-phase part of love numbers
 	|***     (part h_2^(0)i and l_2^(0)i )
 	|
@@ -195,21 +243,36 @@ solid.f [LN 110–150]
 	|      dxtide(1)=dxtide(1)+xcorsta(1)
 	|      dxtide(2)=dxtide(2)+xcorsta(2)
 	|      dxtide(3)=dxtide(3)+xcorsta(3)
-	|
+	```
+	*/
+	Coordinate<double> corrected_geo_coordinate = mantle_inelasticity_diurnal_band_correction(geo_coordinate,
+		solar_coordinate, lunar_coordinate, solar_factor2, lunar_factor2);
+	detide += corrected_geo_coordinate;
+
+	/*
+	```
 	|*** second, for the semi-diurnal band
 	|
 	|      call st1isem(xsta,xsun,xmon,fac2sun,fac2mon,xcorsta)
 	|      dxtide(1)=dxtide(1)+xcorsta(1)
 	|      dxtide(2)=dxtide(2)+xcorsta(2)
 	|      dxtide(3)=dxtide(3)+xcorsta(3)
-	|
+	```
+	*/
+
+	/*
+	```
 	|*** corrections for the latitude dependence of love numbers (part l^(1) )
 	|
 	|      call st1l1(xsta,xsun,xmon,fac2sun,fac2mon,xcorsta)
 	|      dxtide(1)=dxtide(1)+xcorsta(1)
 	|      dxtide(2)=dxtide(2)+xcorsta(2)
 	|      dxtide(3)=dxtide(3)+xcorsta(3)
-	|
+	```
+	*/
+
+	/*
+	```
 	|*** consider corrections for step 2
 	|*** corrections for the diurnal band:
 	|
@@ -258,6 +321,157 @@ solid.f [LN 110–150]
 	|***   dxtide(1)=dxtide(1)-dr*cosla*cosphi+dn*cosla*sinphi
 	|***   dxtide(2)=dxtide(2)-dr*sinla*cosphi+dn*sinla*sinphi
 	|***   dxtide(3)=dxtide(3)-dr*sinphi      -dn*cosphi
+	|
+	|      return
+	|      end
+	```
+	*/
+}
+
+
+Coordinate<double> mantle_inelasticity_diurnal_band_correction(Coordinate<double> geo_coordinate, 
+	Coordinate<double> solar_coordinate, Coordinate<double> lunar_coordinate, double solar_factor2, double lunar_factor2 
+)
+/*
+```
+|      subroutine st1idiu(xsta,xsun,xmon,fac2sun,fac2mon,xcorsta)
+|
+|*** this subroutine gives the out-of-phase corrections induced by
+|*** mantle inelasticity in the diurnal band
+|
+|***  input: xsta,xsun,xmon,fac2sun,fac2mon
+|*** output: xcorsta
+```
+xsta — geo_coordinate
+xsun — solar_coordinate
+xmon — lunar_coordinate
+fac2sun — solar_factor2
+fac2mon — lunar_factor2
+xcorsta — [returned]
+*/
+{
+	/*
+	solid.f [LN ]
+	```
+	|      rsta=enorm8(xsta)
+	|      sinphi=xsta(3)/rsta
+	|      cosphi=dsqrt(xsta(1)**2+xsta(2)**2)/rsta
+	|      cos2phi=cosphi**2-sinphi**2
+	|      sinla=xsta(2)/cosphi/rsta
+	|      cosla=xsta(1)/cosphi/rsta
+	|      rmon=enorm8(xmon)
+	|      rsun=enorm8(xsun)
+	```
+	rsta — geo_distance
+	sinphi — sin_ϕ
+	cosphi — cos_ϕ
+	cos2phi — cos_squared_ϕ
+	sinla — sin_latitude
+	cosla — cos_latitude
+	rmon — lunar_distance
+	rsun — solar_distance
+	*/
+	double geo_distance = geo_coordinate.distance();
+	double sin_ϕ = geo_coordinate[Z] / geo_distance;
+	double cos_ϕ = sqrt(pow(geo_coordinate[X], 2) + pow(geo_coordinate[Y], 2)) / geo_distance;
+	double cos_squared_ϕ = pow(cos_ϕ, 2) - pow(sin_ϕ, 2);
+	double sin_latitude = geo_coordinate[Y] / cos_ϕ / geo_distance;
+	double cos_latitude = geo_coordinate[X] / cos_ϕ / geo_distance;
+	double lunar_distance = lunar_coordinate.distance();
+	double solar_distance = solar_coordinate.distance();
+
+	/*
+	```
+	|      drsun=-3.d0*dhi*sinphi*cosphi*fac2sun*xsun(3)*(xsun(1)*
+	|     *            sinla-xsun(2)*cosla)/rsun**2
+	|      drmon=-3.d0*dhi*sinphi*cosphi*fac2mon*xmon(3)*(xmon(1)*
+	|     *            sinla-xmon(2)*cosla)/rmon**2
+	|      dnsun=-3.d0*dli*cos2phi*fac2sun*xsun(3)*(xsun(1)*sinla-
+	|     *            xsun(2)*cosla)/rsun**2
+	|      dnmon=-3.d0*dli*cos2phi*fac2mon*xmon(3)*(xmon(1)*sinla-
+	|     *            xmon(2)*cosla)/rmon**2
+	|      desun=-3.d0*dli*sinphi*fac2sun*xsun(3)*
+	|     * (xsun(1)*cosla+xsun(2)*sinla)/rsun**2
+	|      demon=-3.d0*dli*sinphi*fac2mon*xmon(3)*
+	|     * (xmon(1)*cosla+xmon(2)*sinla)/rmon**2
+	|      dr=drsun+drmon
+	|      dn=dnsun+dnmon
+	|      de=desun+demon
+	|      xcorsta(1)=dr*cosla*cosphi-de*sinla-dn*sinphi*cosla
+	|      xcorsta(2)=dr*sinla*cosphi+de*cosla-dn*sinphi*sinla
+	|      xcorsta(3)=dr*sinphi               +dn*cosphi
+	```
+	*/
+	double solar_dr = -3.0 * -0.0022 * sin_ϕ * cos_ϕ * solar_factor2 * solar_coordinate[Z]
+		* (solar_coordinate[X] * sin_latitude - solar_coordinate[Y] * cos_latitude) / pow(solar_distance, 2);
+	double lunar_dr = -3.0 * -0.0022 * sin_ϕ * cos_ϕ * lunar_factor2 * lunar_coordinate[Z]
+		* (lunar_coordinate[X] * sin_latitude - lunar_coordinate[Y] * cos_latitude) / pow(lunar_distance, 2);
+	double solar_dn = -3.0 * -0.0007 * cos_squared_ϕ * solar_factor2 * solar_coordinate[Z]
+		* (solar_coordinate[X] * sin_latitude - solar_coordinate[Y] * cos_latitude) / pow(solar_distance, 2);
+	double lunar_dn = -3.0 * -0.0007 * cos_squared_ϕ * lunar_factor2 * lunar_coordinate[Z]
+		* (lunar_coordinate[X] * sin_latitude - lunar_coordinate[Y] * cos_latitude) / pow(lunar_distance, 2);
+	double solar_de = -3.0 * -0.0007 * sin_ϕ * solar_factor2 * solar_coordinate[Z]
+		* (solar_coordinate[X] * cos_latitude * solar_coordinate[Y] * sin_latitude) / pow(solar_distance, 2);
+	double lunar_de = -3.0 * -0.0007 * sin_ϕ * lunar_factor2 * lunar_coordinate[Z]
+		* (lunar_coordinate[X] * cos_latitude * lunar_coordinate[Y] * sin_latitude) / pow(lunar_distance, 2);
+
+	double dr = solar_dr + lunar_dr;
+	double dn = solar_dn + lunar_dn;
+	double de = solar_de + lunar_de;
+	return Coordinate<double>(
+		dr * cos_latitude * cos_ϕ - de * sin_latitude - dn * sin_ϕ * cos_latitude,
+		dr * sin_latitude * cos_ϕ + de * cos_latitude - dn * sin_ϕ * sin_latitude,
+		dr * sin_ϕ + dn * cos_ϕ
+	);
+}
+
+
+Coordinate<double> 
+/*
+```
+|      subroutine st1isem(xsta,xsun,xmon,fac2sun,fac2mon,xcorsta)
+|
+|*** this subroutine gives the out-of-phase corrections induced by
+|*** mantle inelasticity in the diurnal band
+|
+|***  input: xsta,xsun,xmon,fac2sun,fac2mon
+|*** output: xcorsta
+```
+*/
+{
+	/*
+	```
+	|      implicit double precision (a-h,o-z)
+	|      dimension xsta(3),xsun(3),xmon(3),xcorsta(3)
+	|      data dhi/-0.0022d0/,dli/-0.0007d0/
+	|
+	|      rsta=enorm8(xsta)
+	|      sinphi=xsta(3)/rsta
+	|      cosphi=dsqrt(xsta(1)**2+xsta(2)**2)/rsta
+	|      sinla=xsta(2)/cosphi/rsta
+	|      cosla=xsta(1)/cosphi/rsta
+	|      costwola=cosla**2-sinla**2
+	|      sintwola=2.d0*cosla*sinla
+	|      rmon=enorm8(xmon)
+	|      rsun=enorm8(xsun)
+	|      drsun=-3.d0/4.d0*dhi*cosphi**2*fac2sun*((xsun(1)**2-xsun(2)**2)*
+	|     * sintwola-2.*xsun(1)*xsun(2)*costwola)/rsun**2
+	|      drmon=-3.d0/4.d0*dhi*cosphi**2*fac2mon*((xmon(1)**2-xmon(2)**2)*
+	|     * sintwola-2.*xmon(1)*xmon(2)*costwola)/rmon**2
+	|      dnsun=1.5d0*dli*sinphi*cosphi*fac2sun*((xsun(1)**2-xsun(2)**2)*
+	|     * sintwola-2.d0*xsun(1)*xsun(2)*costwola)/rsun**2
+	|      dnmon=1.5d0*dli*sinphi*cosphi*fac2mon*((xmon(1)**2-xmon(2)**2)*
+	|     * sintwola-2.d0*xmon(1)*xmon(2)*costwola)/rmon**2
+	|      desun=-3.d0/2.d0*dli*cosphi*fac2sun*((xsun(1)**2-xsun(2)**2)*
+	|     * costwola+2.*xsun(1)*xsun(2)*sintwola)/rsun**2
+	|      demon=-3.d0/2.d0*dli*cosphi*fac2mon*((xmon(1)**2-xmon(2)**2)*
+	|     * costwola+2.d0*xmon(1)*xmon(2)*sintwola)/rmon**2
+	|      dr=drsun+drmon
+	|      dn=dnsun+dnmon
+	|      de=desun+demon
+	|      xcorsta(1)=dr*cosla*cosphi-de*sinla-dn*sinphi*cosla
+	|      xcorsta(2)=dr*sinla*cosphi+de*cosla-dn*sinphi*sinla
+	|      xcorsta(3)=dr*sinphi+dn*cosphi
 	|
 	|      return
 	|      end

@@ -63,6 +63,17 @@ class Geolocation
 		static const double THIRD_DEGREE_LOVE;  // 0.292: h3/0.292d0/
 		static const double THIRD_DEGREE_SHIDA;  // 0.015: l3/0.015d0/
 
+		/*
+		solid.f [LN 214–216]
+		```
+		|      mass_ratio_sun=332945.943062d0
+		|      mass_ratio_moon=0.012300034d0
+		|      re =6378136.55d0
+		```
+		*/
+		static const double SOLAR_MASS_RATIO;  // 332945.943062: mass_ratio_sun=332945.943062d0
+		static const double LUNAR_MASS_RATIO;  // 0.012300034: mass_ratio_moon=0.012300034d0
+		static const double RE;  // 6378136.55: re=6378136.55d0
 
 		Geolocation(double latitude_degrees, double longitude_degrees);
 		// friend void operator<<(double cartesian_coordinates[3], Geolocation& geolocation);
@@ -71,6 +82,11 @@ class Geolocation
 		Coordinate<double> sun_coordinates(unsigned int initial_modified_julian_date, JulianDate& julian_date);
 		Coordinate<double> moon_coordinates(unsigned int initial_modified_julian_date, JulianDate& julian_date);
 		Coordinate<double> tidal_displacement(unsigned int initial_modified_julian_date, JulianDate& julian_date);
+
+		Coordinate<double> mantle_inelasticity_diurnal_band_correction(Coordinate<double> geo_coordinate, 
+			Coordinate<double> solar_coordinate, Coordinate<double> lunar_coordinate, double solar_factor2,
+			double lunar_factor2 
+		);
 
 	private:
 		const double _latitude;  // Radians
