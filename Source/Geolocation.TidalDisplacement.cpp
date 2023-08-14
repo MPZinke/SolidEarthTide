@@ -273,6 +273,9 @@ lflag —
 	|      dxtide(3)=dxtide(3)+xcorsta(3)
 	```
 	*/
+	Coordinate<double> corrected_latitude_dependence = latitude_dependence_correction(geo_coordinate,
+		solar_coordinate, lunar_coordinate, solar_factor2, lunar_factor2);
+	detide += corrected_latitude_dependence;
 
 	/*
 	```
@@ -332,8 +335,9 @@ lflag —
 }
 
 
-Coordinate<double> Geolocation::mantle_inelasticity_1st_diurnal_band_correction(Coordinate<double> geo_coordinate, 
-	Coordinate<double> solar_coordinate, Coordinate<double> lunar_coordinate, double solar_factor2, double lunar_factor2 
+Coordinate<double> Geolocation::mantle_inelasticity_1st_diurnal_band_correction(Coordinate<double>& geo_coordinate, 
+	Coordinate<double>& solar_coordinate, Coordinate<double>& lunar_coordinate, double solar_factor2,
+	double lunar_factor2 
 )
 /*
 ```
@@ -429,8 +433,9 @@ xcorsta — [returned]
 }
 
 
-Coordinate<double> Geolocation::mantle_inelasticity_semi_diurnal_band_correction(Coordinate<double> geo_coordinate, 
-	Coordinate<double> solar_coordinate, Coordinate<double> lunar_coordinate, double solar_factor2, double lunar_factor2 
+Coordinate<double> Geolocation::mantle_inelasticity_semi_diurnal_band_correction(Coordinate<double>& geo_coordinate, 
+	Coordinate<double>& solar_coordinate, Coordinate<double>& lunar_coordinate, double solar_factor2,
+	double lunar_factor2 
 )
 /*
 ```
@@ -441,6 +446,12 @@ Coordinate<double> Geolocation::mantle_inelasticity_semi_diurnal_band_correction
 |
 |***  input: xsta,xsun,xmon,fac2sun,fac2mon
 |*** output: xcorsta
+xsta — geo_coordinate
+xsun — solar_coordinate
+xmon — lunar_coordinate
+fac2sun — solar_factor2
+fac2mon — lunar_factor2
+xcorsta — [returned]
 ```
 */
 {
@@ -532,5 +543,141 @@ Coordinate<double> Geolocation::mantle_inelasticity_semi_diurnal_band_correction
 		dr * cos_latitude * cos_ϕ - de * sin_latitude - dn * sin_ϕ * cos_latitude,
 		dr * sin_latitude * cos_ϕ + de * cos_latitude - dn * sin_ϕ * sin_latitude,
 		dr * sin_ϕ + dn * cos_ϕ
+	);
+}
+
+
+Coordinate<double> Geolocation::latitude_dependence_correction(Coordinate<double>& geo_coordinate, 
+	Coordinate<double>& solar_coordinate, Coordinate<double>& lunar_coordinate, double solar_factor2,
+	double lunar_factor2 
+)
+/*
+```
+|      subroutine st1l1(xsta,xsun,xmon,fac2sun,fac2mon,xcorsta)
+|
+|*** this subroutine gives the corrections induced by the latitude dependence
+|*** given by l^(1) in mahtews et al (1991)
+|
+|***  input: xsta,xsun,xmon,fac3sun,fac3mon
+|*** output: xcorsta
+```
+xsta — geo_coordinate
+xsun — solar_coordinate
+xmon — lunar_coordinate
+fac2sun — solar_factor2
+fac2mon — lunar_factor2
+xcorsta — [returned]
+*/
+{
+	/*
+	```
+	|      rsta=enorm8(xsta)
+	|      sinphi=xsta(3)/rsta
+	|      cosphi=dsqrt(xsta(1)**2+xsta(2)**2)/rsta
+	|      sinla=xsta(2)/cosphi/rsta
+	|      cosla=xsta(1)/cosphi/rsta
+	|      rmon=enorm8(xmon)
+	|      rsun=enorm8(xsun)
+	```
+	rsta — geo_distance
+	sinphi — sin_ϕ
+	cosphi — cos_ϕ
+	cos2phi — cos_squared_ϕ
+	sinla — sin_latitude
+	cosla — cos_latitude
+	rmon — lunar_distance
+	rsun — solar_distance
+	*/
+	double geo_distance = geo_coordinate.distance();
+	double sin_ϕ = geo_coordinate[Z] / geo_distance;
+	double cos_ϕ = sqrt(pow(geo_coordinate[X], 2) + pow(geo_coordinate[Y], 2)) / geo_distance;
+	double cos_squared_ϕ = pow(cos_ϕ, 2) - pow(sin_ϕ, 2);
+	double sin_latitude = geo_coordinate[Y] / cos_ϕ / geo_distance;
+	double cos_latitude = geo_coordinate[X] / cos_ϕ / geo_distance;
+	double lunar_distance = lunar_coordinate.distance();
+	double solar_distance = solar_coordinate.distance();
+
+	/*
+	```
+	|*** for the diurnal band
+	|
+	|      l1=l1d
+	|      dnsun=-l1*sinphi**2*fac2sun*xsun(3)*(xsun(1)*cosla+xsun(2)*sinla)
+	|     *            /rsun**2
+	|      dnmon=-l1*sinphi**2*fac2mon*xmon(3)*(xmon(1)*cosla+xmon(2)*sinla)
+	|     *            /rmon**2
+	|      desun=l1*sinphi*(cosphi**2-sinphi**2)*fac2sun*xsun(3)*
+	|     * (xsun(1)*sinla-xsun(2)*cosla)/rsun**2
+	|      demon=l1*sinphi*(cosphi**2-sinphi**2)*fac2mon*xmon(3)*
+	|     * (xmon(1)*sinla-xmon(2)*cosla)/rmon**2
+	|      de=3.d0*(desun+demon)
+	|      dn=3.d0*(dnsun+dnmon)
+	|      xcorsta(1)=-de*sinla-dn*sinphi*cosla
+	|      xcorsta(2)= de*cosla-dn*sinphi*sinla
+	|      xcorsta(3)=          dn*cosphi
+	```
+	*/
+	double solar_diurnal_dn = -0.0012 * pow(sin_ϕ, 2) * solar_factor2 * solar_coordinate[Z]
+		* (solar_coordinate[X] * cos_latitude + solar_coordinate[Y] * sin_latitude) / pow(solar_distance, 2);
+	double lunar_diurnal_dn = -0.0012 * pow(sin_ϕ, 2) * lunar_factor2 * lunar_coordinate[Z]
+		* (lunar_coordinate[X] * cos_latitude + lunar_coordinate[Y] * sin_latitude) / pow(lunar_distance, 2);
+	double solar_diurnal_de = 0.0012 * sin_ϕ * (pow(cos_ϕ, 2) - pow(sin_ϕ, 2)) * solar_factor2 * solar_coordinate[Z]
+		* (solar_coordinate[X] * sin_latitude - solar_coordinate[Y] * cos_latitude) / pow(solar_distance, 2);
+	double lunar_diurnal_de = 0.0012 * sin_ϕ * (pow(cos_ϕ, 2) - pow(sin_ϕ, 2)) * lunar_factor2 * lunar_coordinate[Z]
+		* (lunar_coordinate[X] * sin_latitude - lunar_coordinate[Y] * cos_latitude) / pow(lunar_distance, 2);
+	double diurnal_de = 3.0 * (solar_diurnal_de +  lunar_diurnal_de);
+	double diurnal_dn = 3.0 * (solar_diurnal_dn +  lunar_diurnal_dn);
+
+	Coordinate<double> diurnal_band_correction(-diurnal_de * sin_latitude - diurnal_dn * sin_ϕ * cos_latitude,
+		diurnal_de * cos_latitude - diurnal_dn * sin_ϕ * sin_latitude,
+		diurnal_dn * cos_ϕ
+	);
+
+	/*
+	```
+	|*** for the semi-diurnal band
+	|
+	|      l1=l1sd
+	|      costwola=cosla**2-sinla**2
+	|      sintwola=2.d0*cosla*sinla
+	|      dnsun=-l1/2.d0*sinphi*cosphi*fac2sun*((xsun(1)**2-xsun(2)**2)*
+	|     * costwola+2.d0*xsun(1)*xsun(2)*sintwola)/rsun**2
+	|      dnmon=-l1/2.d0*sinphi*cosphi*fac2mon*((xmon(1)**2-xmon(2)**2)*
+	|     * costwola+2.d0*xmon(1)*xmon(2)*sintwola)/rmon**2
+	|      desun=-l1/2.d0*sinphi**2*cosphi*fac2sun*((xsun(1)**2-xsun(2)**2)*
+	|     * sintwola-2.d0*xsun(1)*xsun(2)*costwola)/rsun**2
+	|      demon=-l1/2.d0*sinphi**2*cosphi*fac2mon*((xmon(1)**2-xmon(2)**2)*
+	|     * sintwola-2.d0*xmon(1)*xmon(2)*costwola)/rmon**2
+	|      de=3.d0*(desun+demon)
+	|      dn=3.d0*(dnsun+dnmon)
+	|      xcorsta(1)=xcorsta(1)-de*sinla-dn*sinphi*cosla
+	|      xcorsta(2)=xcorsta(2)+de*cosla-dn*sinphi*sinla
+	|      xcorsta(3)=xcorsta(3)         +dn*cosphi
+	```
+	*/
+	double cos_squared_latitude = pow(cos_latitude, 2) - pow(sin_latitude, 2);
+	double sin_squared_latitude = 2.0 * cos_latitude * sin_latitude;
+	double solar_semi_dn = -0.0024 / 2.0 * sin_ϕ * cos_ϕ * solar_factor2
+		* ((pow(solar_coordinate[X], 2) - pow(solar_coordinate[Z], 2))
+			* cos_squared_latitude + 2.0 * solar_coordinate[X] * solar_coordinate[Y] * sin_squared_latitude)
+		/ pow(solar_distance, 2);
+	double lunar_semi_dn = -0.0024 / 2.0 * sin_ϕ * cos_ϕ * lunar_factor2
+		* ((pow(lunar_coordinate[X], 2) - pow(lunar_coordinate[Y], 2))
+			* cos_squared_latitude + 2.0 * lunar_coordinate[X] * lunar_coordinate[Y] * sin_squared_latitude)
+		/ pow(lunar_distance, 2);
+	double solar_semi_de = -0.0024 / 2.0 * pow(sin_ϕ, 2) * cos_ϕ * solar_factor2
+		* ((pow(solar_coordinate[X], 2) - pow(solar_coordinate[Y], 2))
+			* sin_squared_latitude - 2.0 * solar_coordinate[X] * solar_coordinate[Y] * cos_squared_latitude)
+		/ pow(solar_distance, 2);
+	double lunar_semi_de = -0.0024 / 2.0 * pow(sin_ϕ, 2) * cos_ϕ * lunar_factor2
+		* ((pow(lunar_coordinate[X], 2) - pow(lunar_coordinate[Y], 2))
+			* sin_squared_latitude - 2.0 * lunar_coordinate[X] * lunar_coordinate[Y] * cos_squared_latitude)
+		/ pow(lunar_distance, 2);
+	double semi_de = 3.0 * (solar_semi_de + lunar_semi_de);
+	double semi_dn = 3.0 * (solar_semi_dn + lunar_semi_dn);
+	return Coordinate<double>(
+		diurnal_band_correction[X] - semi_de * sin_latitude - semi_dn * sin_ϕ * cos_latitude,
+		diurnal_band_correction[Y] + semi_de * cos_latitude - semi_dn * sin_ϕ * sin_latitude,
+		diurnal_band_correction[Z] + semi_dn * cos_ϕ
 	);
 }
