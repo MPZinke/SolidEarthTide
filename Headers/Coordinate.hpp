@@ -30,11 +30,13 @@ class Coordinate
 		Coordinate();
 		Coordinate(T x, T y, T z);
 		T distance();
+		Coordinate<double> geodetic_cartesian_system(double latitude, double longitude);
 		Coordinate<T> rotate1(double theta_radians);
 		Coordinate<T> rotate3(double theta_radians);
 		T operator+(Coordinate<T>& right);
 		Coordinate<T>& operator+=(Coordinate<T>& right);
 		T operator*(Coordinate<T>& right);
+		Coordinate<T> operator/(T right);
 		T operator[](unsigned int index) const;
 		T& operator[](unsigned int index);
 
@@ -44,6 +46,8 @@ class Coordinate
 		T z;
 };
 
+
+// —————————————————————————————————————————————————— CONSTRUCTORS —————————————————————————————————————————————————— //
 
 template<typename T>
 Coordinate<T>::Coordinate(T x, T y, T z)
@@ -55,6 +59,76 @@ template<typename T>
 Coordinate<T>::Coordinate()
 : x{(T)0.0}, y{(T)0.0}, z{(T)0.0}
 {}
+
+
+// ————————————————————————————————————————————————————— OTHER  ————————————————————————————————————————————————————— //
+
+template<typename T>
+T Coordinate<T>::distance()
+/*
+solid.f [LN 693–702]
+```
+|      double precision function enorm8(a)
+|
+|*** compute euclidian norm of a vector (of length 3)
+|
+|      double precision a(3)
+|
+|      enorm8=dsqrt(a(1)*a(1) + a(2)*a(2) + a(3)*a(3))
+|
+|      return
+|      end
+```
+*/
+{
+	return sqrt(x * x + y * y + z * z);
+}
+
+
+template<typename T>
+Coordinate<double> Coordinate<T>::geodetic_cartesian_system(double latitude, double longitude)
+/*
+solid.f [LN 989–992]
+```
+|      subroutine rge(gla,glo,u,v,w,x,y,z)
+|
+|*** given a rectangular cartesian system (x,y,z)
+|*** compute a geodetic h cartesian sys   (u,v,w)
+```
+*/
+{
+	/*
+	solid.f [LN 996–999]
+	```
+	|      sb=dsin(gla)
+	|      cb=dcos(gla)
+	|      sl=dsin(glo)
+	|      cl=dcos(glo)
+	```
+	sb — sin_latitude
+	cb — cos_latitude
+	sl — sin_longitude
+	cl — cos_longitude
+	*/
+	double sin_latitude = sin(latitude);
+	double cos_latitude = cos(latitude);
+	double sin_longitude = sin(longitude);
+	double cos_longitude = cos(longitude);
+
+	/*
+	solid.f [LN 1001–1003]
+	```
+	|      u=-sb*cl*x-sb*sl*y+cb*z
+	|      v=-   sl*x+   cl*y
+	|      w= cb*cl*x+cb*sl*y+sb*z
+	```
+	*/
+	return Coordinate<double>(
+		-sin_latitude * cos_longitude * x - sin_latitude * sin_longitude * y + cos_latitude * z,
+		-sin_longitude * x + cos_longitude * y,
+		cos_latitude * cos_longitude * x + cos_latitude * sin_longitude * y + sin_latitude * z
+	);
+}
 
 
 template<typename T>
@@ -119,6 +193,8 @@ solid.f [LN 1025–1040]
 }
 
 
+// ———————————————————————————————————————————————————— OPERATOR ———————————————————————————————————————————————————— //
+
 template<typename T>
 T Coordinate<T>::operator+(Coordinate<T>& right)
 {
@@ -147,24 +223,12 @@ Dot product
 
 
 template<typename T>
-T Coordinate<T>::distance()
+Coordinate<T> Coordinate<T>::operator/(T right)
 /*
-solid.f [LN 693–702]
-```
-|      double precision function enorm8(a)
-|
-|*** compute euclidian norm of a vector (of length 3)
-|
-|      double precision a(3)
-|
-|      enorm8=dsqrt(a(1)*a(1) + a(2)*a(2) + a(3)*a(3))
-|
-|      return
-|      end
-```
+Dot product
 */
 {
-	return sqrt(x * x + y * y + z * z);
+	return Coordinate<T>(x / right, y / right, z / right);
 }
 
 

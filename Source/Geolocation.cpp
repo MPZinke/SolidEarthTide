@@ -15,6 +15,14 @@ const long double Geolocation::PI = 3.141592653589793238462643383279502884197169
 const long double Geolocation::RADIAN = 180.0 / Geolocation::PI;
 
 /*
+solid.f [LN 378]
+```	
+|      data deg2rad/0.017453292519943295769d0/
+```
+*/
+const long double Geolocation::RADIANS_PER_DEGREE = 0.017453292519943295769;
+
+/*
 solid.f [LN 899–904]
 ```
 |*** mean elements for year 2000, sun ecliptic orbit wrt. Earth

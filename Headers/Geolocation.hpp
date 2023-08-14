@@ -14,6 +14,14 @@ class Geolocation
 		static const long double RADIAN;
 
 		/*
+		solid.f [LN 378]
+		```	
+		|      data deg2rad/0.017453292519943295769d0/
+		```
+		*/
+		static const long double RADIANS_PER_DEGREE;
+
+		/*
 		solid.f [LN 22–23]
 		```
 		|      a=6378137.d0
@@ -76,7 +84,6 @@ class Geolocation
 		static const double RE;  // 6378136.55: re=6378136.55d0
 
 		Geolocation(double latitude_degrees, double longitude_degrees);
-		// friend void operator<<(double cartesian_coordinates[3], Geolocation& geolocation);
 		operator Coordinate<double>();
 
 		Coordinate<double> sun_coordinates(unsigned int initial_modified_julian_date, JulianDate& julian_date);
@@ -94,6 +101,12 @@ class Geolocation
 		Coordinate<double> latitude_dependence_correction(Coordinate<double>& geo_coordinate, 
 			Coordinate<double>& solar_coordinate, Coordinate<double>& lunar_coordinate, double solar_factor2,
 			double lunar_factor2 
+		);
+		Coordinate<double> second_step_diurnal_band_correction(Coordinate<double>& geo_coordinate,
+			double terrestrial_time_hours, double terrestrial_time_years
+		);
+		Coordinate<double> second_step_longitudinal_correction(Coordinate<double>& geo_coordinate,
+			double terrestrial_time_hours, double terrestrial_time_years
 		);
 
 	private:
