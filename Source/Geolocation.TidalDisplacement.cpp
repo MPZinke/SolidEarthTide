@@ -7,7 +7,7 @@
 #include "JulianDate.hpp"
 
 
-Coordinate<double> Geolocation::tidal_displacement(unsigned int initial_modified_julian_date, JulianDate& julian_date)
+Coordinate<double> Geolocation::tide(unsigned int initial_modified_julian_date, JulianDate& julian_date)
 /*
 solid.f [LN 110–150]
 ```
@@ -63,7 +63,7 @@ lflag —
 */
 {
 	/*
-	solid.f [LN –]
+	solid.f [LN 160–180]
 	```
 	|*** nominal second degree and third degree love numbers and shida numbers
 	|
@@ -96,7 +96,7 @@ lflag —
 	double terrestrial_time_hours = (terrestrial_time_days - (int)terrestrial_time_days) * 24.0;
 
 	/*
-	solid.f [LN –]
+	solid.f [LN 182–187]
 	```
 	|*** scalar product of station vector with sun/moon vector
 	|
@@ -129,7 +129,7 @@ lflag —
 	double lunar_sc = lunar_scalar / geo_distance / lunar_distance;
 
 	/*
-	solid.f [LN –]
+	solid.f [LN 189–203]
 	```
 	|*** computation of new h2 and l2
 	|
@@ -168,7 +168,7 @@ lflag —
 	double lunar_p3 = p3_pre_op * pow(lunar_sc, 3) + 1.5 * THIRD_DEGREE_SHIDA - THIRD_DEGREE_LOVE * lunar_sc;
 
 	/*
-	solid.f [LN –]
+	solid.f [LN 205–210]
 	```
 	|*** term in direction of sun/moon vector
 	|
@@ -188,7 +188,7 @@ lflag —
 	double lunar_direction3 = 3.0 * THIRD_DEGREE_SHIDA / 2.0 * (5.0 * pow(lunar_sc, 2) - 1.0);
 
 	/*
-	solid.f [LN –]
+	solid.f [LN 212–220]
 	```
 	|*** factors for sun/moon
 	|
@@ -211,7 +211,7 @@ lflag —
 	double lunar_factor3 = lunar_factor2 * RE / lunar_distance;
 
 	/*
-	solid.f [LN –]
+	solid.f [LN 222–230]
 	```
 	|*** total displacement
 	|
@@ -239,7 +239,7 @@ lflag —
 	}
 
 	/*
-	solid.f [LN –]
+	solid.f [LN 232–240]
 	```
 	|*** corrections for the out-of-phase part of love numbers
 	|***     (part h_2^(0)i and l_2^(0)i )
@@ -257,7 +257,7 @@ lflag —
 	detide += corrected_geo_coordinate_1st;
 
 	/*
-	solid.f [LN –]
+	solid.f [LN 242–247]
 	```
 	|*** second, for the semi-diurnal band
 	|
@@ -272,7 +272,7 @@ lflag —
 	detide += corrected_geo_coordinate_semi;
 
 	/*
-	solid.f [LN –]
+	solid.f [LN 249–254]
 	```
 	|*** corrections for the latitude dependence of love numbers (part l^(1) )
 	|
@@ -287,7 +287,7 @@ lflag —
 	detide += corrected_latitude_dependence;
 
 	/*
-	solid.f [LN –]
+	solid.f [LN 256–271]
 	```
 	|*** consider corrections for step 2
 	|*** corrections for the diurnal band:
@@ -305,7 +305,15 @@ lflag —
 	|      dxtide(1)=dxtide(1)+xcorsta(1)
 	|      dxtide(2)=dxtide(2)+xcorsta(2)
 	|      dxtide(3)=dxtide(3)+xcorsta(3)
-	|
+	```
+	*/
+	Coordinate<double> corrected_second_diurnal_band = second_step_diurnal_band_correction(geo_coordinate,
+		terrestrial_time_hours, terrestrial_time_years);
+	detide += corrected_second_diurnal_band;
+
+	/*
+	solid.f [LN 273–281]
+	```
 	|***  corrections for the long-period band,
 	|***   (in-phase and out-of-phase frequency dependence):
 	|
@@ -313,7 +321,15 @@ lflag —
 	|      dxtide(1)=dxtide(1)+xcorsta(1)
 	|      dxtide(2)=dxtide(2)+xcorsta(2)
 	|      dxtide(3)=dxtide(3)+xcorsta(3)
-	|
+	```
+	*/
+	Coordinate<double> corrected_second_longitude = second_step_longitudinal_correction(geo_coordinate,
+		terrestrial_time_hours, terrestrial_time_years);
+	detide += corrected_second_longitude;
+			
+	/*
+	solid.f [LN 281–303]
+	```
 	|*** consider corrections for step 3
 	|*-----------------------------------------------------------------------
 	|* The code below is commented to prevent restoring deformation
@@ -337,11 +353,9 @@ lflag —
 	|***   dxtide(1)=dxtide(1)-dr*cosla*cosphi+dn*cosla*sinphi
 	|***   dxtide(2)=dxtide(2)-dr*sinla*cosphi+dn*sinla*sinphi
 	|***   dxtide(3)=dxtide(3)-dr*sinphi      -dn*cosphi
-	|
-	|      return
-	|      end
 	```
 	*/
+	return detide;
 }
 
 
@@ -597,7 +611,6 @@ xcorsta — [returned]
 	rsta — geo_distance
 	sinphi — sin_ϕ
 	cosphi — cos_ϕ
-	cos2phi — cos_squared_ϕ
 	sinla — sin_latitude
 	cosla — cos_latitude
 	rmon — lunar_distance
@@ -606,7 +619,6 @@ xcorsta — [returned]
 	double geo_distance = geo_coordinate.distance();
 	double sin_ϕ = geo_coordinate[Z] / geo_distance;
 	double cos_ϕ = sqrt(pow(geo_coordinate[X], 2) + pow(geo_coordinate[Y], 2)) / geo_distance;
-	double cos_squared_ϕ = pow(cos_ϕ, 2) - pow(sin_ϕ, 2);
 	double sin_latitude = geo_coordinate[Y] / cos_ϕ / geo_distance;
 	double cos_latitude = geo_coordinate[X] / cos_ϕ / geo_distance;
 	double lunar_distance = lunar_coordinate.distance();

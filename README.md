@@ -1,4 +1,4 @@
-# SolidEarthFlexing
+# SolidEarthTide
 _created by: MPZinke_ <br/>
 C++ translated version of [solid.f by Dennis Milbert](https://geodesyworld.github.io/SOFTS/solid.htm)
 
@@ -9,7 +9,7 @@ As the Earth rotates the sun & moon pull on the tides and the crust. The force f
 ## Contents
 
 1. `./Headers/`—Contains header files for C++ translated code.
-2. `./SolidEarthFlexing/`—Contains Fortran code & documentation by original author.
+2. `./SolidFortranProject/`—Contains Fortran code & documentation by original author.
 3. `./Source`—Contains source files for C++ translated code.
 4. `./.gitignore`—Git Ignore file so that I don't upload a bunch of junk (you're welcome).
 5. `./README.md`—This file.

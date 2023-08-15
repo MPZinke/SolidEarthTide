@@ -5,7 +5,7 @@ SOURCE=./Source/*.cpp
 
 
 all:
-	$(CXX) $(FLAGS) $(HEADER) $(SOURCE) -o SolidEarthFlexing
+	$(CXX) $(FLAGS) $(HEADER) $(SOURCE) -o SolidEarthTide
 
 
 fortran:
