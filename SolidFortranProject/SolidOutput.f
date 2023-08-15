@@ -77,32 +77,39 @@
       imn=   0
       sec=0.d0                                         !*** UTC time system
       call civmjd(iyr,imo,idy,ihr,imn,sec,mjd,fmjd)
+      write(*,'(a,i5,i5,i5,i5,i5,f32.16,i5,f32.16)')
+     * 'solid::iyr,imo,idy,ihr,imn,sec,mjd,fmjd: ',
+     * iyr,imo,idy,ihr,imn,sec,mjd,fmjd
       call mjdciv(mjd,fmjd,iyr,imo,idy,ihr,imn,sec)    !*** normalize civil time
-      write(*, '(a,i5)') 'AFTER NORMALIZING ',idy
+      write(*,'(a,i5,f32.16,i5,i5,i5,i5,i5,f32.16)')
+     * 'solid::mjd,fmjd,iyr,imo,idy,ihr,imn,sec: ',
+     * mjd,fmjd,iyr,imo,idy,ihr,imn,sec
       call setjd0(iyr,imo,idy)
+      write(*, '(a,i5,i5,i5)') 'solid::iyr,imo,idy',iyr,imo,idy
 
-C       tdel2=1.d0/60.d0/24.d0                           !*** 1 minute steps
-C       do iloop=0,60*24
-C         lflag=.false.                           !*** false means flag not raised
-C         call sunxyz (mjd,fmjd,rsun,lflag)                   !*** mjd/fmjd in UTC
-C         call moonxyz(mjd,fmjd,rmoon,lflag)                  !*** mjd/fmjd in UTC
-C         call detide (xsta,mjd,fmjd,rsun,rmoon,etide,lflag)  !*** mjd/fmjd in UTC
-C         xt = etide(1)
-C         yt = etide(2)
-C         zt = etide(3)
+      tdel2=1.d0/60.d0/24.d0                           !*** 1 minute steps
+      write(*, '(a,i5)') 'solid::tdel2',tdel2
+      do iloop=0,60*24
+        lflag=.false.                           !*** false means flag not raised
+        call sunxyz (mjd,fmjd,rsun,lflag)                   !*** mjd/fmjd in UTC
+        call moonxyz(mjd,fmjd,rmoon,lflag)                  !*** mjd/fmjd in UTC
+        call detide (xsta,mjd,fmjd,rsun,rmoon,etide,lflag)  !*** mjd/fmjd in UTC
+        xt = etide(1)
+        yt = etide(2)
+        zt = etide(3)
 
-C *** determine local geodetic horizon components (topocentric)
+*** determine local geodetic horizon components (topocentric)
 
-C         call rge(gla0,glo0,ut,vt,wt,xt,   yt,   zt)       !*** tide vector
+        call rge(gla0,glo0,ut,vt,wt,xt,   yt,   zt)       !*** tide vector
 
-C         call mjdciv(mjd,fmjd               +0.001d0/86400.d0,
-C      *              iyr,imo,idy,ihr,imn,sec-0.001d0)
+        call mjdciv(mjd,fmjd               +0.001d0/86400.d0,
+     *              iyr,imo,idy,ihr,imn,sec-0.001d0)
 
-C         tsec=ihr*3600.d0+imn*60.d0+sec
-C         write(lout,'(f8.1,3f10.6)') tsec,ut,vt,wt
-C         fmjd=fmjd+tdel2
-C         fmjd=(idnint(fmjd*86400.d0))/86400.d0      !*** force 1 sec. granularity
-C       enddo
+        tsec=ihr*3600.d0+imn*60.d0+sec
+        write(lout,'(f8.1,3f10.6)') tsec,ut,vt,wt
+        fmjd=fmjd+tdel2
+        fmjd=(idnint(fmjd*86400.d0))/86400.d0      !*** force 1 sec. granularity
+      enddo
 
 *** test flag and end of processing
 

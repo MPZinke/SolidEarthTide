@@ -81,9 +81,9 @@ fmjd —
 	|      iyr=ic-4715-it3
 	```
 	*/
-	int day = ib - id - (ie * 30.6001) + _fractional_modified_julian_date;
-	int month = ie - 1 - 12 * (ie / 14.0);
-	int year = ic - 4715 - ((7 + month) / 10.0);
+	int day = ib - id - (int)(ie * 30.6001) + _fractional_modified_julian_date;
+	int month = ie - 1 - 12 * (int)(ie / 14.0);
+	int year = ic - 4715 - (int)((7 + month) / 10.0);
 
 	/*
 	solid.f [LN 12—12]
