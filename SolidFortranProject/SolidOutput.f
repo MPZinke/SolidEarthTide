@@ -92,6 +92,9 @@
       do iloop=0,60*24
         lflag=.false.                           !*** false means flag not raised
         call sunxyz (mjd,fmjd,rsun,lflag)                   !*** mjd/fmjd in UTC
+        write(*, '(a,i5,f32.16,f32.16,f32.16,f32.16)')
+     *     'solid::mjd,fmjd,rsun(1),rsun(2),rsun(3)',
+     *     mjd,fmjd,rsun(1),rsun(2),rsun(3)
         call moonxyz(mjd,fmjd,rmoon,lflag)                  !*** mjd/fmjd in UTC
         call detide (xsta,mjd,fmjd,rsun,rmoon,etide,lflag)  !*** mjd/fmjd in UTC
         xt = etide(1)
