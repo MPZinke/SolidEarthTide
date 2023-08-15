@@ -9,4 +9,8 @@ all:
 
 
 fortran:
-	gfortran solid.f -o solid
+	gfortran SolidFortranProject/solid.f -o solid
+
+
+fortran-output:
+	gfortran SolidFortranProject/SolidOutput.f -o SolidOutput
